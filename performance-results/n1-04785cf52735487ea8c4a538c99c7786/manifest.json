@@ -1,0 +1,183 @@
+{
+  "purpose": "N1 isolated synthetic evidence; not production acceptance or deployment inputs",
+  "before_runtime_commit": "b781aacb341812cd3dd2b21172d7e9f7d2526cf9",
+  "notes": "Both sides use schema 0008 and the same benchmark generator; only auth.py/dictionary.py runtime sources changed. No credentials or business data were copied. All files copied verbatim without modifying reports.",
+  "files": [
+    {
+      "file": "reports/wm-n1-before-standard.json",
+      "sha256": "fed44a0f1210a87e0c9b6bba3150772deb873943d0ad1897b506c6fe71b009af"
+    },
+    {
+      "file": "reports/wm-n1-final-standard.json",
+      "sha256": "1f956477fc839134032db2f960db9443b6ce0a133fd326c69441b3df97503d93"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-standard.log",
+      "sha256": "648728159a514e982a42a7573816c743198e349c2471cd173fe2e0cbb031337a"
+    },
+    {
+      "file": "reports/wm-n1-before-spread.json",
+      "sha256": "b4d0568b30992719949dee0a3ea8567f3c3aa70889c88ae46826752199366b19"
+    },
+    {
+      "file": "reports/wm-n1-final-spread.json",
+      "sha256": "422ce5d4a6e1a6fb1d9c96f54e810fec43a07ca1acd32718774f69299316a529"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-spread.log",
+      "sha256": "b05d24115d2998a06fd0fa8dedded3a5538200640abb76713a3fc3f8f5f2fe7f"
+    },
+    {
+      "file": "reports/wm-n1-before-sparse.json",
+      "sha256": "4f3768218d669a604d192fea260544d50eeeaab0bb1b95fb70f223f562c3575c"
+    },
+    {
+      "file": "reports/wm-n1-final-sparse.json",
+      "sha256": "81ee086146d2a96e0906e0902a4a90ad067451deac08f02bf778421b7672f81b"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-sparse.log",
+      "sha256": "438daa4267668b60342dd036e93e59be744c8a210b092c840d4f1abaf1203df3"
+    },
+    {
+      "file": "reports/wm-n1-before-dominant.json",
+      "sha256": "b70f5c1cdfd4c46dd945e4a91ecff0250ba20e34ac4f712659f594a183af0d4d"
+    },
+    {
+      "file": "reports/wm-n1-final-dominant.json",
+      "sha256": "769d908b378fe7a958173994c107038ea7debec3eab89cb58dd6aede8279984f"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-dominant.log",
+      "sha256": "84c4fc6c2588611b5791142c1dbe2f8832c20b485dc2e6296755f8506c74f3e4"
+    },
+    {
+      "file": "reports/wm-n1-before-deleted.json",
+      "sha256": "5b0082268cc2c1426343535d2c07bdee217a80103d013c8d11b3247dc0c9cb9b"
+    },
+    {
+      "file": "reports/wm-n1-final-deleted.json",
+      "sha256": "698ea5cb1af65088c9f73bbeea57e65b6068bb4008d4d24d608a67a238a4e7b1"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-deleted.log",
+      "sha256": "bf3807331ab66225d536f5b273d0171fd219b538f76a5ab19a4311030c63d8cb"
+    },
+    {
+      "file": "reports/wm-n1-before-wide.json",
+      "sha256": "94731912fa4b632480c9841dc9dc4558c8af69d04e8e706d4001565539739d62"
+    },
+    {
+      "file": "reports/wm-n1-final-wide.json",
+      "sha256": "f1f74602635849b5f27bb76ffaa628f9bf606e37b1b8a3ba918e1984491e38b0"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-wide.log",
+      "sha256": "c74f1e5ad3ec018d7625c9f2028e8d248d77a61096f3940ce70d97cd0eaff69b"
+    },
+    {
+      "file": "reports/wm-n1-before-large.json",
+      "sha256": "651a4985b3dd0eb436439055b966c3de8cc5fcb661afc923ace2be7493d1c22f"
+    },
+    {
+      "file": "reports/wm-n1-final-large.json",
+      "sha256": "e365734df6094c5a01ccce9b56d2c6c18475555b67c91821ef3227bf75b64156"
+    },
+    {
+      "file": "logs/wm-n1-final-comparison-large.log",
+      "sha256": "f3b10bdfdcfc2e8e47b338b7e2e0e4b9f7d373b42028901b2f7e417de5cac586"
+    },
+    {
+      "file": "reports/wm-n1-repeat-before-sparse.json",
+      "sha256": "0bf129a14c0e837f9b734df65384cc766f66ed780c0036887130bd1fb18bb6a6"
+    },
+    {
+      "file": "reports/wm-n1-final-repeat-sparse.json",
+      "sha256": "a87b46c84f183eb3a7bd4e5d9d26255845e2c1813b833ac9febb5a5e10f82b14"
+    },
+    {
+      "file": "reports/wm-n1-repeat-before-deleted.json",
+      "sha256": "926d95b917a146b0a0a6367d1c43711285f7e7f3262c8c3f405822f889638035"
+    },
+    {
+      "file": "reports/wm-n1-final-repeat-deleted.json",
+      "sha256": "b8ec93cffe3490cfebdb89b9dbb0e2e1eb4ce1a011aced25bff77bb71aa70b6b"
+    },
+    {
+      "file": "reports/wm-n1-final-repeat-large.json",
+      "sha256": "877864f09598e4b62e0628899c43ecc07a7add9fe98cd5ebccd522707db65d6d"
+    },
+    {
+      "file": "logs/wm-n1-final-repeat-comparison-large.log",
+      "sha256": "23b8c440c13e5044e446defc15711f2f19769886c574f30737ceb4de1abbda7b"
+    },
+    {
+      "file": "logs/wm-n1-final-repeat-comparison-sparse.log",
+      "sha256": "372ef3fcd66665b0094c9a5cb71adc3bb95bcdf1a1b292a6c9d5e5fe1d04848c"
+    },
+    {
+      "file": "logs/wm-n1-final-repeat-comparison-deleted.log",
+      "sha256": "c48b89f420fb679889577371360b42db0d4ce341b4fb3812eac00aa6cb3e3f16"
+    },
+    {
+      "file": "logs/wm-n1-confirmed-check.log",
+      "sha256": "11d02d9d90331899c300b62bd0130bd004cda39e64e4cf90c73c56fc0214d20c"
+    },
+    {
+      "file": "logs/wm-n1-mock-browser.log",
+      "sha256": "457cf78a41d5fa2df23acc0ffd42f8cc2570a800696a104745612b92b5cf409b"
+    },
+    {
+      "file": "logs/wm-n1-real-browser.log",
+      "sha256": "4f3af2dc0532e15d6acb5aef0e9a23398b678596c3fa1ab261b61b8821fd54a9"
+    },
+    {
+      "file": "logs/wm-n1-ci-smoke.log",
+      "sha256": "51f3984032531c13de28d560474627105bf99f0a5e8744224a6cb1a04c446e6e"
+    },
+    {
+      "file": "sources/final/auth.py.txt",
+      "sha256": "773346c3f132e18b561cbf9535b472e677489a3fada956fac8093179a5b8c6c3"
+    },
+    {
+      "file": "sources/before/auth.py.txt",
+      "sha256": "09abcac72016ed8e9c6c20e08f2d910a577d6b6e4c0d4e530778f8999c7c8a6e"
+    },
+    {
+      "file": "sources/final/dictionary.py.txt",
+      "sha256": "7efab382c64dd9848d0670482a8b5de1a18071776fd745dc55a0f42ab13f1f7c"
+    },
+    {
+      "file": "sources/before/dictionary.py.txt",
+      "sha256": "ca1de13f08a2663999e772bdbc98de1c6acd99ae33136ac62d21c0b8515d119f"
+    },
+    {
+      "file": "sources/benchmark/measurement.py.txt",
+      "sha256": "3b9ea47ea688d9f4a09a7ad60b298c620d10fbf736370560f5570ecd4b71e398"
+    },
+    {
+      "file": "sources/benchmark/conftest.py.txt",
+      "sha256": "3c3d0ed8235bf2f8a5f9f8cbb069915363852c6aa581b9b4d5561f84c6be55e6"
+    },
+    {
+      "file": "sources/benchmark/test_lists.py.txt",
+      "sha256": "704ea97ee5e397877be34b2fcb9fd0936da052a55ff280d1fc13399700cf4618"
+    },
+    {
+      "file": "sources/benchmark/compare.py.txt",
+      "sha256": "624065490f1dfe47b71823a9dcd1a5470ac1fd61c1c3671901a0d69a5f0aedda"
+    },
+    {
+      "file": "sources/benchmark/__init__.py.txt",
+      "sha256": "9d279cf01414804117eff2810556ba6107fe3d12773bca1f340e58e97fc6fdf2"
+    },
+    {
+      "file": "sources/benchmark/dataset.py.txt",
+      "sha256": "20591bd80fb4094f513f3eff3f51ec309e4e6d522378c82fbd2111195f0272e0"
+    },
+    {
+      "file": "sources/benchmark/index_costs.py.txt",
+      "sha256": "0be328c71373d20d08e1554f06699c8ef4263ffaa955b80c0d6c056337c89221"
+    }
+  ]
+}

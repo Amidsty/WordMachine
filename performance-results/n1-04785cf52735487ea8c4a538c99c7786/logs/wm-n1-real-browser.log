@@ -1,0 +1,70 @@
+npm --prefix frontend run build
+
+> wordmachine-frontend@0.1.0 build
+> npm run typecheck && vite build
+
+
+> wordmachine-frontend@0.1.0 typecheck
+> vue-tsc --noEmit
+
+vite v6.4.4 building for production...
+transforming...
+✓ 152 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                                 0.62 kB │ gzip:  0.45 kB
+dist/assets/index-MriZ2-03.css                                                  4.75 kB │ gzip:  1.59 kB
+dist/assets/usePagedResource-D1n3isXm.js                                        0.76 kB │ gzip:  0.45 kB
+dist/assets/ManagementLayout-Cmyg5GiG.js                                        0.86 kB │ gzip:  0.57 kB
+dist/assets/usePolling-CQxbB27i.js                                              0.87 kB │ gzip:  0.47 kB
+dist/assets/ModalDialog.vue_vue_type_script_setup_true_lang-Ba3qvYNR.js         0.96 kB │ gzip:  0.60 kB
+dist/assets/DataTable.vue_vue_type_script_setup_true_lang-BziqSXeC.js           1.30 kB │ gzip:  0.67 kB
+dist/assets/PublicProfilePage-Cq7XW9qy.js                                       1.66 kB │ gzip:  1.02 kB
+dist/assets/LeaderboardPage-Dz0fBms8.js                                         1.77 kB │ gzip:  1.06 kB
+dist/assets/GameDetailPage-BFwEDnJu.js                                          1.89 kB │ gzip:  1.13 kB
+dist/assets/DictionaryDialog.vue_vue_type_script_setup_true_lang-ClcRUe-2.js    2.11 kB │ gzip:  1.22 kB
+dist/assets/DictionariesPage-D6Ynhvxl.js                                        3.26 kB │ gzip:  1.65 kB
+dist/assets/UsersPage-tYvMO8bJ.js                                               5.49 kB │ gzip:  2.44 kB
+dist/assets/AnswerHistory.vue_vue_type_script_setup_true_lang-DotY2O27.js       7.48 kB │ gzip:  3.48 kB
+dist/assets/GamePlayingPage-Bt5ngMNd.js                                         9.31 kB │ gzip:  4.26 kB
+dist/assets/DictionaryPage-DB1fBNcL.js                                          9.92 kB │ gzip:  4.20 kB
+dist/assets/LobbyPage-NHvZYEyj.js                                              10.16 kB │ gzip:  4.19 kB
+dist/assets/index-ClcdiSCw.js                                                 226.51 kB │ gzip: 74.91 kB
+✓ built in 1.78s
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/with_test_mysql.py -- .venv/bin/python -m pytest tests/browser -q -s -p no:cacheprovider
+Temporary MySQL 8.0.42-0ubuntu0.20.04.1 on 127.0.0.1:44835; grants restricted to wm_test_*
+Real browser harness started: game.spec.ts on private loopback server
+
+Running 2 tests using 1 worker
+
+  ✓  1 mysql-e2e/game.spec.ts:50:1 › real users maintain a dictionary, play over Socket/HTTP, reconnect and settle once (13.2s)
+  ✓  2 mysql-e2e/game.spec.ts:118:1 › a real committed HTTP response lost in transit is retried with its original ID, then early end settles once (2.4s)
+
+  2 passed (16.2s)
+
+.Real browser harness started: auth.spec.ts on private loopback server
+
+Running 1 test using 1 worker
+
+  ✓  1 mysql-e2e/auth.spec.ts:3:1 › registration, profile edits and password rotation use real sessions and revoke all old tokens (4.3s)
+
+  1 passed (4.8s)
+
+.Real browser harness started: admin.spec.ts on private loopback server
+
+Running 1 test using 1 worker
+
+  ✓  1 mysql-e2e/admin.spec.ts:3:1 › admin reset, ban and restore revoke real HTTP/Socket sessions without reviving old cookies (5.8s)
+
+  1 passed (6.4s)
+
+.Real browser harness started: dictionaries.spec.ts on private loopback server
+
+Running 1 test using 1 worker
+
+  ✓  1 mysql-e2e/dictionaries.spec.ts:38:1 › owner, reader, root and anonymous dictionary rights, complete CRUD and atomic CSV work against MySQL (5.5s)
+
+  1 passed (6.0s)
+
+.
+4 passed in 43.44s

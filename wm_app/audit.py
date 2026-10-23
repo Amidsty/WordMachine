@@ -1,0 +1,463 @@
+"""Read-only legacy audit. Reports identifiers, not passwords or answer contents."""
+
+import json
+import math
+from collections import Counter, defaultdict
+
+import click
+from flask import current_app
+from flask.cli import with_appcontext
+
+from .db import get_db_connection
+from .services import (
+    game_answers,
+    game_participants,
+    game_questions,
+    game_settlements,
+    weighted_games,
+    weighted_rating,
+)
+from .services.dictionary_multipliers import game_multiplier
+from .services.errors import GameError
+from .services.rating_events import attach_manual
+
+
+def inspect_legacy(
+    users,
+    dictionaries,
+    words,
+    games,
+    questions=(),
+    members=(),
+    answers=(),
+    settlement_rows=(),
+    ratings=(),
+    rating_event_rows=(),
+    manual_rating_rows=(),
+    weighted_data=None,
+):
+    issues = []
+
+    def issue(kind, entity, entity_id, field=None):
+        issues.append({'kind': kind, 'entity': entity, 'id': entity_id, 'field': field})
+
+    def array(row, field, entity):
+        try:
+            value = json.loads(row.get(field)) if row.get(field) else []
+            if not isinstance(value, list):
+                raise ValueError
+            return value
+        except (TypeError, ValueError):
+            issue('invalid_json_array', entity, row['id'], field)
+            return []
+
+    weighted = {}
+    if weighted_data is not None:
+        for table in (
+            'game_rating_snapshot',
+            'weighted_answer',
+            'weighted_result',
+            'newcomer_award',
+        ):
+            weighted[table] = defaultdict(list)
+            for row in weighted_data[table]:
+                weighted[table][row['game_id']].append(row)
+    expected_occupancy = []
+    user_ids = {row['id'] for row in users}
+    dict_ids = {row['id'] for row in dictionaries}
+    word_ids = {row['id'] for row in words}
+    game_ids = {row['id'] for row in games}
+    snapshots = defaultdict(list)
+    for question in questions:
+        snapshots[question['game_id']].append(question)
+        if question['game_id'] not in game_ids:
+            issue('missing_game_reference', 'game_question', question['game_id'])
+    memberships = defaultdict(list)
+    for member in members:
+        memberships[member['game_id']].append(member)
+        if member['game_id'] not in game_ids:
+            issue('missing_game_reference', 'game_participant', member['game_id'])
+    recorded_answers = defaultdict(list)
+    for answer in answers:
+        recorded_answers[answer['game_id']].append(answer)
+        if answer['game_id'] not in game_ids:
+            issue('missing_game_reference', 'game_answer', answer['game_id'])
+    headers, ledger, user_ledger = defaultdict(list), defaultdict(list), defaultdict(list)
+    game_by_id = {game['id']: game for game in games}
+    for header in settlement_rows:
+        headers[header['game_id']].append(header)
+        if header['game_id'] not in game_ids:
+            issue('missing_game_reference', 'game_settlement', header['game_id'])
+    for row in ratings:
+        ledger[row['game_id']].append(row)
+        if row['game_id'] not in game_ids:
+            issue('missing_game_reference', 'game_rating', row['id'])
+        if row['user_id'] not in user_ids:
+            issue('missing_user_reference', 'game_rating', row['id'])
+        if len(headers[row['game_id']]) != 1:
+            issue('invalid_settlement_reference', 'game_rating', row['id'])
+        elif row['game_id'] in game_by_id:
+            header = headers[row['game_id']][0]
+            parent = game_by_id[row['game_id']]
+            user_ledger[row['user_id']].append(
+                {
+                    **row,
+                    **header,
+                    'settlement_mode': parent.get('settlement_mode', 0),
+                    'rated': parent.get('rated', 1),
+                    'status': parent['status'],
+                }
+            )
+    attach_manual(rating_event_rows, manual_rating_rows)
+    referenced_manuals = {
+        event.get('manual_rating_id')
+        for event in rating_event_rows
+        if event.get('kind') == 'manual'
+    }
+    for source in manual_rating_rows:
+        if source['id'] not in referenced_manuals:
+            issue('unreferenced_manual_rating', 'manual_rating', source['id'])
+        if source['user_id'] not in user_ids or source['actor_id'] not in user_ids:
+            issue('missing_user_reference', 'manual_rating', source['id'])
+    user_events = defaultdict(list)
+    for event in rating_event_rows:
+        user_events[event['user_id']].append(event)
+        if event['user_id'] not in user_ids:
+            issue('missing_user_reference', 'rating_event', event['id'])
+    usernames = Counter(row['username'] for row in users)
+    settlements = Counter()
+    for user in users:
+        if usernames[user['username']] > 1:
+            issue('duplicate_username', 'user', user['id'])
+        if type(user['rating']) is not int:
+            issue('invalid_rating', 'user', user['id'])
+        for gid in array(user, 'gamehistory', 'user'):
+            if type(gid) is not int or gid not in game_ids:
+                issue('missing_game_reference', 'user', user['id'], 'gamehistory')
+        for entry in array(user, 'ratinghistory', 'user'):
+            if not isinstance(entry, dict) or type(entry.get('game_id')) is not int:
+                issue('invalid_history_entry', 'user', user['id'], 'ratinghistory')
+                continue
+            gid = entry['game_id']
+            if gid not in game_ids:
+                issue('missing_game_reference', 'user', user['id'], 'ratinghistory')
+            settlements[(user['id'], gid)] += 1
+            if settlements[(user['id'], gid)] > 1:
+                issue('duplicate_settlement', 'user', user['id'], 'ratinghistory')
+    for row in ratings:
+        settlements[(row['user_id'], row['game_id'])] += 1
+        if settlements[(row['user_id'], row['game_id'])] > 1:
+            issue('duplicate_settlement', 'game_rating', row['id'])
+    for user in users:
+        if (
+            user_ledger[user['id']]
+            or user.get('rating_ledger_id') is not None
+            or user_events[user['id']]
+            or user.get('rating_event_id') is not None
+        ):
+            try:
+                game_settlements.merge_history(
+                    user,
+                    sorted(user_ledger[user['id']], key=lambda row: row['id']),
+                    sorted(user_events[user['id']], key=lambda row: row['sequence']),
+                )
+            except GameError:
+                issue('invalid_rating_history', 'user', user['id'])
+    for word in words:
+        if word['dictid'] not in dict_ids:
+            issue('missing_dictionary', 'word', word['id'])
+        for field in ('english', 'chinese'):
+            if not game_questions.valid_text(word.get(field)):
+                issue('invalid_word_text', 'word', word['id'], field)
+    for game in games:
+        try:
+            game_multiplier(game)
+        except GameError:
+            issue('invalid_multiplier', 'game', game['id'])
+        try:
+            source = game_questions.source(game)
+        except GameError:
+            source = None
+            issue('unknown_question_mode', 'game', game['id'])
+        if game['status'] not in (-1, 0, 1, 2):
+            issue('unknown_status', 'game', game['id'])
+        if game['ownerid'] not in user_ids:
+            issue('missing_owner', 'game', game['id'])
+        if source == 'legacy_live' and game['dictid'] not in dict_ids:
+            issue('missing_dictionary', 'game', game['id'])
+        try:
+            if game_participants.relational(game):
+                participants = game_participants.validate_rows(game, memberships[game['id']])
+            else:
+                participants = array(game, 'users', 'game')
+                if memberships[game['id']]:
+                    issue('unexpected_game_participants', 'game', game['id'])
+        except GameError:
+            issue('invalid_game_participants', 'game', game['id'])
+            participants = []
+        if game['status'] == 0 and game.get('rated', 1) == 1:
+            expected_occupancy.extend((uid, game['id']) for uid in participants)
+        wordlist = array(game, 'wordlist', 'game')
+        try:
+            if game_answers.relational(game):
+                result = game_answers.validate_rows(
+                    {**game, 'users': participants, 'wordlist': wordlist},
+                    recorded_answers[game['id']],
+                )
+            else:
+                result = array(game, 'result', 'game')
+                if all(isinstance(entry, dict) for entry in result):
+                    game_answers.validate_rule_order(result)
+                if recorded_answers[game['id']]:
+                    issue('unexpected_game_answers', 'game', game['id'])
+        except GameError:
+            issue('invalid_game_answers', 'game', game['id'])
+            result = []
+        snapshot = snapshots[game['id']]
+        existing_words = word_ids
+        if source == 'snapshot':
+            existing_words = {q['word_id'] for q in snapshot if type(q.get('word_id')) is int}
+            try:
+                game_questions.validate_snapshot(game, wordlist, snapshot)
+            except GameError:
+                issue('invalid_question_snapshot', 'game', game['id'])
+        elif snapshot:
+            issue('unexpected_question_snapshot', 'game', game['id'])
+        for field, ids, existing in [
+            ('users', participants, user_ids),
+            ('wordlist', wordlist, existing_words),
+        ]:
+            valid_ids = [item for item in ids if type(item) is int]
+            if len(valid_ids) != len(ids) or any(item not in existing for item in valid_ids):
+                issue('invalid_reference', 'game', game['id'], field)
+            if len(set(valid_ids)) != len(valid_ids):
+                issue('duplicate_reference', 'game', game['id'], field)
+        if game['ownerid'] not in participants:
+            issue('owner_not_participant', 'game', game['id'])
+        if len(result) > len(wordlist) or (game['status'] == -1 and result):
+            issue('invalid_progress', 'game', game['id'])
+        for index, entry in enumerate(result):
+            if not isinstance(entry, dict):
+                issue('invalid_answer', 'game', game['id'])
+                continue
+            perf = entry.get('perf')
+            if type(perf) not in (int, float) or not math.isfinite(perf):
+                issue('missing_or_invalid_perf', 'game', game['id'])
+            if (
+                not participants
+                or entry.get('uid') != participants[index % len(participants)]
+                or index >= len(wordlist)
+                or entry.get('word_id') != wordlist[index]
+            ):
+                issue('invalid_answer_order', 'game', game['id'])
+        try:
+            if len(headers[game['id']]) > 1:
+                raise game_settlements.invalid_settlement()
+            game_settlements.validate_rows(
+                {**game, 'users': participants, 'result': result},
+                headers[game['id']][0] if headers[game['id']] else None,
+                ledger[game['id']],
+            )
+        except GameError:
+            issue('invalid_game_settlement', 'game', game['id'])
+        if weighted_data is not None:
+            try:
+                gid = game['id']
+                current = {**game, 'users': participants, 'wordlist': wordlist, 'result': result}
+                weighted_games.validate_answers(
+                    current, weighted['game_rating_snapshot'][gid], weighted['weighted_answer'][gid]
+                )
+                weighted_games.validate_results(
+                    current,
+                    ledger[gid],
+                    weighted['weighted_result'][gid],
+                    weighted['newcomer_award'][gid],
+                )
+            except (GameError, KeyError, ValueError):
+                issue('invalid_weighted_rating', 'game', game['id'])
+        if game['status'] != 1:
+            if any(settlements[(uid, game['id'])] for uid in participants if type(uid) is int):
+                issue('settled_unfinished_game', 'game', game['id'])
+    if weighted_data is not None:
+        state_rows = {row['user_id']: row for row in weighted_data['user_rating_state']}
+        if set(state_rows) != user_ids:
+            issue('invalid_weighted_users', 'user_rating_state', 0)
+        for uid, row in state_rows.items():
+            try:
+                weighted_rating.integer(row['newcomer_enabled'], 0, 1)
+                weighted_rating.Snapshot(
+                    0, row['remaining_bonus'], row['completed_games'], bool(row['newcomer_enabled'])
+                )
+                results = sorted(
+                    (r for r in weighted_data['weighted_result'] if r['user_id'] == uid),
+                    key=lambda r: r['completed_after'],
+                )
+                if len(results) != row['completed_games'] or any(
+                    r['completed_after'] != index for index, r in enumerate(results, 1)
+                ):
+                    raise ValueError
+                if results and results[-1]['remaining_after'] != row['remaining_bonus']:
+                    raise ValueError
+                for r in results:
+                    snap = next(
+                        s
+                        for s in weighted['game_rating_snapshot'][r['game_id']]
+                        if s['user_id'] == uid
+                    )
+                    if (
+                        snap['completed_games'] + 1 != r['completed_after']
+                        or snap['newcomer_enabled'] != row['newcomer_enabled']
+                    ):
+                        raise ValueError
+            except (ValueError, KeyError, StopIteration):
+                issue('invalid_weighted_state', 'user', uid)
+        actual = [(r['user_id'], r['game_id']) for r in weighted_data['rated_occupancy']]
+        if sorted(actual) != sorted(expected_occupancy):
+            issue('invalid_rated_occupancy', 'rated_occupancy', 0)
+    return {
+        'counts': {
+            'users': len(users),
+            'dictionaries': len(dictionaries),
+            'words': len(words),
+            'games': len(games),
+        },
+        'issue_count': len(issues),
+        'issues': issues,
+    }
+
+
+@click.command('audit-legacy')
+@click.option(
+    '--output',
+    type=click.Path(dir_okay=False),
+    help='Write JSON report to a file instead of stdout.',
+)
+@with_appcontext
+def audit_legacy_command(output):
+    """Inspect existing data in a read-only transaction. Exit 1 if issues are found."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute('SET TRANSACTION READ ONLY')
+            conn.begin()
+            cursor.execute('SELECT id, username, rating, gamehistory, ratinghistory FROM user')
+            users = cursor.fetchall()
+            cursor.execute('SELECT id FROM dict')
+            dictionaries = cursor.fetchall()
+            cursor.execute('SELECT id, dictid, english, chinese FROM word')
+            words = cursor.fetchall()
+            cursor.execute('SELECT * FROM game')  # Also works before question metadata exists.
+            games = cursor.fetchall()
+            cursor.execute(
+                'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() '
+                "AND TABLE_NAME = 'game' AND COLUMN_NAME = 'question_mode'"
+            )
+            questions = []
+            if cursor.fetchone():
+                cursor.execute(
+                    'SELECT game_id, position, word_id, english, chinese FROM game_question ORDER BY game_id, position'
+                )
+                questions = cursor.fetchall()
+            cursor.execute(
+                'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() '
+                "AND TABLE_NAME = 'game' AND COLUMN_NAME = 'participant_mode'"
+            )
+            members = []
+            if cursor.fetchone():
+                cursor.execute(
+                    'SELECT game_id, user_id, position, joined_at, recorded_at FROM game_participant ORDER BY game_id, position'
+                )
+                members = cursor.fetchall()
+            cursor.execute(
+                'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() '
+                "AND TABLE_NAME = 'game' AND COLUMN_NAME = 'answer_mode'"
+            )
+            answers = []
+            if cursor.fetchone():
+                cursor.execute('SELECT * FROM game_answer ORDER BY game_id, position')
+                answers = cursor.fetchall()
+            cursor.execute(
+                'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() '
+                "AND TABLE_NAME = 'game' AND COLUMN_NAME = 'settlement_mode'"
+            )
+            settlement_rows, ratings = [], []
+            if cursor.fetchone():
+                cursor.execute('SELECT id, rating_ledger_id FROM user')
+                pointers = {row['id']: row['rating_ledger_id'] for row in cursor.fetchall()}
+                users = [{**user, 'rating_ledger_id': pointers[user['id']]} for user in users]
+                cursor.execute('SELECT * FROM game_settlement ORDER BY game_id')
+                settlement_rows = cursor.fetchall()
+                cursor.execute('SELECT * FROM game_rating ORDER BY id')
+                ratings = cursor.fetchall()
+            cursor.execute(
+                'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() '
+                "AND TABLE_NAME = 'user' AND COLUMN_NAME = 'rating_event_id'"
+            )
+            rating_event_rows = []
+            if cursor.fetchone():
+                cursor.execute('SELECT id, rating_event_id FROM user')
+                pointers = {row['id']: row['rating_event_id'] for row in cursor.fetchall()}
+                users = [{**user, 'rating_event_id': pointers[user['id']]} for user in users]
+                cursor.execute('SELECT * FROM rating_event ORDER BY user_id, sequence')
+                rating_event_rows = cursor.fetchall()
+            cursor.execute(
+                "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'manual_rating'"
+            )
+            manual_rating_rows = []
+            if cursor.fetchone():
+                cursor.execute('SELECT * FROM manual_rating ORDER BY id')
+                manual_rating_rows = cursor.fetchall()
+            cursor.execute(
+                "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='user_rating_state'"
+            )
+            weighted_data = None
+            if cursor.fetchone():
+                weighted_data = {}
+                for table in (
+                    'user_rating_state',
+                    'rated_occupancy',
+                    'game_rating_snapshot',
+                    'weighted_answer',
+                    'weighted_result',
+                    'newcomer_award',
+                ):
+                    cursor.execute(
+                        'SELECT * FROM '
+                        + table
+                        + (' ORDER BY game_id,position' if table == 'weighted_answer' else '')
+                    )
+                    weighted_data[table] = list(cursor.fetchall())
+        report = inspect_legacy(
+            users,
+            dictionaries,
+            words,
+            games,
+            questions,
+            members,
+            answers,
+            settlement_rows,
+            ratings,
+            rating_event_rows,
+            manual_rating_rows,
+            weighted_data,
+        )
+    except Exception:
+        current_app.logger.exception('Legacy audit failed')
+        raise click.ClickException(
+            'Audit failed; check server logs and database configuration'
+        ) from None
+    finally:
+        if conn is not None:
+            try:
+                conn.rollback()
+            finally:
+                conn.close()
+    content = json.dumps(report, ensure_ascii=False, indent=2)
+    if output:
+        with open(output, 'w', encoding='utf-8') as target:
+            target.write(content + '\n')
+    else:
+        click.echo(content)
+    if report['issue_count']:
+        raise click.exceptions.Exit(1)

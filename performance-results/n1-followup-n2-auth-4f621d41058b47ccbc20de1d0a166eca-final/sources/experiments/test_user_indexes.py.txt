@@ -1,0 +1,50 @@
+"""Temporary index experiment on disposable synthetic databases only."""
+from pathlib import Path
+import time
+import pytest
+from tests.integration.conftest import legacy_database, migrate_database, mysql_app
+from tests.performance.dataset import DISTRIBUTIONS, seed
+from tests.performance.index_costs import require_fixture, storage
+from tests.performance.measurement import environment, measure, save_report
+from tests.performance.test_lists import cases
+from wm_app.db import get_db_connection
+
+
+def ddl(app, statements):
+    require_fixture(app)
+    with app.app_context():
+        connection=get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                for sql in statements:
+                    cursor.execute(sql)
+                    cursor.fetchall()
+        finally:
+            connection.close()
+
+
+@pytest.mark.parametrize('profile', list(DISTRIBUTIONS))
+def test_user_indexes(mysql_app, profile):
+    seed(mysql_app,'medium',profile)
+    report={'environment':environment(mysql_app),'profile':profile,'size':'medium','variants':{}}
+    references={}
+    for kind in ('current','asc','desc','current_repeat'):
+        timing=None
+        if kind in ('asc','desc'):
+            start=time.perf_counter()
+            ddl(mysql_app,[f'ALTER TABLE user ADD INDEX ix_probe_user_deleted_id (deleted, id {kind.upper()}), ALGORITHM=INPLACE, LOCK=NONE', 'ANALYZE TABLE user'])
+            timing=(time.perf_counter()-start)*1000
+        try:
+            results={}
+            for name, action in cases():
+                if name.startswith(('users.','leaderboard.')):
+                    measured=measure(mysql_app,action,5)
+                    if name in references: assert references[name]==measured['result_sha256']
+                    else: references[name]=measured['result_sha256']
+                    results[name]=measured
+                    print(profile,kind,name,round(measured['service_ms']['median'],2),flush=True)
+            report['variants'][kind]={'build_and_analyze_ms':timing,'storage':storage(mysql_app),'cases':results}
+        finally:
+            if kind in ('asc','desc'):
+                ddl(mysql_app,['ALTER TABLE user DROP INDEX ix_probe_user_deleted_id, ALGORITHM=INPLACE, LOCK=NONE','ANALYZE TABLE user'])
+    save_report(Path(__file__).parent/f'user-indexes-{profile}.json',report)

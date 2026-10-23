@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+work=/tmp/wm-n1-followup-wrnvtapp
+python=/home/sunsnow/WordMachine/.venv/bin/python
+cd "$work/reference"
+for profile in standard spread sparse dominant deleted wide; do
+  "$python" -m pytest tests/performance -q -s -p no:cacheprovider --list-perf-size=medium --list-perf-distribution="$profile" --list-perf-runs=3 --list-perf-write-costs --list-perf-report="$work/baseline-$profile.json" > "$work/baseline-$profile.log" 2>&1
+  printf 'Baseline medium %s completed\n' "$profile"
+done
+"$python" -m pytest tests/performance -q -s -p no:cacheprovider --list-perf-size=large --list-perf-runs=3 --list-perf-write-costs --list-perf-report="$work/baseline-large.json" > "$work/baseline-large.log" 2>&1
+printf 'Baseline large standard completed\n'

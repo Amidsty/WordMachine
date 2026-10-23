@@ -1,0 +1,106 @@
+"""Optional committed-write probes, exclusively for the disposable synthetic fixture."""
+
+import re
+import time
+
+from wm_app.db import reading, transaction
+from wm_app.services import dictionary
+
+from .measurement import distribution, signature
+
+CSV_ROWS = 5000
+RATING_ROWS = 100
+
+
+def require_fixture(app):
+    name = app.config.get('DB_NAME')
+    if (
+        not app.testing
+        or not isinstance(name, str)
+        or not re.fullmatch(r'wm_test_[0-9a-f]{32}', name)
+    ):
+        raise ValueError('Index probes require a disposable synthetic test database')
+
+
+def storage(app):
+    with app.app_context(), reading() as cursor:
+        cursor.execute(
+            'SELECT TABLE_NAME, DATA_LENGTH, INDEX_LENGTH FROM information_schema.TABLES '
+            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('word', 'user') ORDER BY TABLE_NAME"
+        )
+        tables = cursor.fetchall()
+        cursor.execute(
+            'SELECT TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX, COLUMN_NAME, COLLATION, NON_UNIQUE, '
+            'INDEX_TYPE, IS_VISIBLE, SUB_PART, EXPRESSION FROM information_schema.STATISTICS '
+            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('word', 'user') "
+            'ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX'
+        )
+        return {'tables': tables, 'indexes': cursor.fetchall()}
+
+
+def write_costs(app, runs):
+    require_fixture(app)
+    # These are independent, deliberate synthetic transactions, not retries of live requests.
+    # Cleanup/verification are excluded from timing. No threshold claims production throughput.
+    content = ''.join(f'probe-{index},测试\n' for index in range(CSV_ROWS))
+    csv_times, rating_times = [], []
+    with app.app_context():
+        with reading() as cursor:
+            cursor.execute(
+                'SELECT id, rating FROM user WHERE id >= 10 ORDER BY id LIMIT %s', (RATING_ROWS,)
+            )
+            original = cursor.fetchall()
+        if len(original) != RATING_ROWS:
+            raise ValueError('Missing synthetic rating probe accounts')
+        dict_id = dictionary.create_dictionary(3, 'synthetic index write probe')['dict_id']
+        try:
+            for sample in range(runs + 1):
+                started = time.perf_counter()
+                result = dictionary.import_csv(3, dict_id, content)
+                elapsed = (time.perf_counter() - started) * 1000
+                assert result['count'] == CSV_ROWS
+                if sample:
+                    csv_times.append(elapsed)
+                with transaction() as cursor:
+                    cursor.execute('SELECT COUNT(*) AS n FROM word WHERE dictid = %s', (dict_id,))
+                    assert cursor.fetchone()['n'] == CSV_ROWS
+                    cursor.execute('DELETE FROM word WHERE dictid = %s', (dict_id,))
+
+                started = time.perf_counter()
+                with transaction() as cursor:
+                    cursor.executemany(
+                        'UPDATE user SET rating = %s WHERE id = %s',
+                        [((row['rating'] or 0) + 1, row['id']) for row in original],
+                    )
+                elapsed = (time.perf_counter() - started) * 1000
+                if sample:
+                    rating_times.append(elapsed)
+                with transaction() as cursor:
+                    cursor.executemany(
+                        'UPDATE user SET rating = %s WHERE id = %s',
+                        [(row['rating'], row['id']) for row in original],
+                    )
+        finally:
+            # Only known fixture rows; no wildcard cleanup, table truncation or mode changes.
+            with transaction() as cursor:
+                cursor.executemany(
+                    'UPDATE user SET rating = %s WHERE id = %s',
+                    [(row['rating'], row['id']) for row in original],
+                )
+                cursor.execute('DELETE FROM word WHERE dictid = %s', (dict_id,))
+                # Delete only this disposable probe's audit rows before its parent.
+                cursor.execute('DELETE FROM dictionary_audit WHERE dict_id = %s', (dict_id,))
+                cursor.execute('DELETE FROM dict WHERE id = %s', (dict_id,))
+        with reading() as cursor:
+            cursor.execute(
+                'SELECT id, rating FROM user WHERE id >= 10 ORDER BY id LIMIT %s', (RATING_ROWS,)
+            )
+            assert cursor.fetchall() == original
+    return {
+        'scope': 'synthetic committed writes; not concurrent load or game settlement timing',
+        'warmups': 1,
+        'runs': runs,
+        'restored_rating_sha256': signature(original),
+        'csv_import': {'rows': CSV_ROWS, 'ms': distribution(csv_times)},
+        'rating_updates': {'rows': RATING_ROWS, 'ms': distribution(rating_times)},
+    }

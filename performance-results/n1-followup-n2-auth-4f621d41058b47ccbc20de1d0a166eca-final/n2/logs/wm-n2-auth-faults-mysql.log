@@ -1,0 +1,32 @@
+Temporary MySQL 8.0.42-0ubuntu0.20.04.1 on 127.0.0.1:59437; grants restricted to wm_test_*
+.....F                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_retry_after_and_persisted_counters_recover_without_rewriting_the_window _
+
+mysql_app = <Flask 'wm_app'>
+
+    def test_retry_after_and_persisted_counters_recover_without_rewriting_the_window(mysql_app):
+        mysql_app.config.update(LOGIN_ACCOUNT_LIMIT=1, LOGIN_IP_LIMIT=20, AUTH_LIMIT_WINDOW=3)
+        client = mysql_app.test_client()
+        csrf = client.get('/api/session').json['csrf_token']
+        headers = {'X-CSRF-Token': csrf}
+        before = facts(mysql_app)
+        password_before = query(mysql_app, 'SELECT pwhash FROM user WHERE id = 1')
+        assert (
+            client.post(
+                '/api/login', json={'username': 'user1', 'password': 'wrong'}, headers=headers
+            ).status_code
+            == 401
+        )
+        blocked = client.post(
+            '/api/login', json={'username': 'USER1', 'password': 'test-password'}, headers=headers
+        )
+        assert blocked.status_code == 429 and blocked.json['code'] == 'rate_limited'
+        retry = int(blocked.headers['Retry-After'])
+>       assert 1 <= retry <= 3 and blocked.json['details']['retry_after'] == retry
+E       assert (4 <= 3)
+
+tests/integration/test_auth_faults_mysql.py:183: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/test_auth_faults_mysql.py::test_retry_after_and_persisted_counters_recover_without_rewriting_the_window
+1 failed, 5 passed in 34.71s

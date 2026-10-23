@@ -1,0 +1,36 @@
+Matching result digests; synthetic medians only, not a production SLA.
+case                            before ms   after ms    SQL count
+dictionaries.first                   2.85       2.63     3 -> 3
+dictionaries.last                   18.09      15.47     3 -> 3
+dictionaries.wide                    6.01       5.74     3 -> 3
+dictionaries.contains               15.68      15.14     3 -> 3
+dictionaries.miss                    2.84       2.98     2 -> 2
+words.first                         10.58      10.09     3 -> 3
+words.last                          19.71      18.00     3 -> 3
+words.contains                      66.16      44.85     3 -> 3
+words.literal                       62.90      46.14     3 -> 3
+words.miss                          59.78      41.28     2 -> 2
+users.first                         10.17       4.81     2 -> 2
+users.last                          14.94      10.41     2 -> 2
+users.contains                       8.58       7.51     2 -> 2
+users.miss                           7.54       6.29     1 -> 1
+leaderboard.first                    4.01       2.34     1 -> 1
+leaderboard.last                     2.93       2.09     1 -> 1
+lobby.first                          6.32       5.42     6 -> 6
+lobby.last                          18.51      17.71     5 -> 5
+lobby.waiting                        5.45       6.40     6 -> 6
+lobby.contains                      18.04      17.12     6 -> 6
+lobby.miss                          28.43      26.70     4 -> 4
+lobby.active_member                  8.53       8.08     7 -> 7
+small_words.first                    2.53       3.88     3 -> 3
+small_words.last                     2.84       2.14     3 -> 3
+small_words.contains                 2.24       2.40     2 -> 2
+small_words.literal                  2.46       2.45     2 -> 2
+small_words.miss                     2.57       1.93     2 -> 2
+words.common                        54.15      39.00     3 -> 3
+words.chinese                       54.14      42.18     3 -> 3
+words.contains_last                107.47      81.30     3 -> 3
+users.second                         8.22       8.54     2 -> 2
+users.filtered                      43.42      19.60     2 -> 2
+users.literal                       27.86      19.99     2 -> 2
+users.all                            5.23       4.97     2 -> 2

@@ -1,0 +1,574 @@
+
+> wordmachine-frontend@0.1.0 check
+> npm run lint && npm run format:check && npm run test && npm run build
+
+
+> wordmachine-frontend@0.1.0 lint
+> eslint .
+
+
+> wordmachine-frontend@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> wordmachine-frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.5 /home/sunsnow/WordMachine/frontend
+
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sunsnow/WordMachine/frontend/node_modules/vitest/suppress-warnings.cjs'
+Require stack:
+- internal/preload
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at node:internal/modules/cjs/loader:2071:12
+    at loadPreloadModules (node:internal/process/pre_execution:756:5)
+    at setupUserModules (node:internal/process/pre_execution:231:5)
+    at prepareExecution (node:internal/process/pre_execution:159:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'internal/preload' ]
+}
+
+Node.js v22.23.2
+
+Node.js v22.23.2
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 16 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files /home/sunsnow/WordMachine/frontend/src/features/lobby/lobby.test.ts.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: Cannot find module 'w3c-xmlserializer'
+Require stack:
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js
+ ❯ Function._resolveFilename node:internal/modules/cjs/loader:1430:15
+ ❯ defaultResolveImpl node:internal/modules/cjs/loader:1040:19
+ ❯ resolveForCJSWithHooks node:internal/modules/cjs/loader:1045:22
+ ❯ Function._load node:internal/modules/cjs/loader:1216:25
+ ❯ wrapModuleLoad node:internal/modules/cjs/loader:254:19
+ ❯ Module.require node:internal/modules/cjs/loader:1527:12
+ ❯ require node:internal/modules/helpers:147:16
+ ❯ Object.<anonymous> node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js:3:33
+ ❯ Module._compile node:internal/modules/cjs/loader:1781:14
+ ❯ Object..js node:internal/modules/cjs/loader:1913:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'MODULE_NOT_FOUND', requireStack: [ '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js' ] }
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files /home/sunsnow/WordMachine/frontend/src/features/games/gamePlaying.test.ts.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: Cannot find module 'w3c-xmlserializer'
+Require stack:
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js
+ ❯ Function._resolveFilename node:internal/modules/cjs/loader:1430:15
+ ❯ defaultResolveImpl node:internal/modules/cjs/loader:1040:19
+ ❯ resolveForCJSWithHooks node:internal/modules/cjs/loader:1045:22
+ ❯ Function._load node:internal/modules/cjs/loader:1216:25
+ ❯ wrapModuleLoad node:internal/modules/cjs/loader:254:19
+ ❯ Module.require node:internal/modules/cjs/loader:1527:12
+ ❯ require node:internal/modules/helpers:147:16
+ ❯ Object.<anonymous> node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js:3:33
+ ❯ Module._compile node:internal/modules/cjs/loader:1781:14
+ ❯ Object..js node:internal/modules/cjs/loader:1913:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'MODULE_NOT_FOUND', requireStack: [ '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js' ] }
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files /home/sunsnow/WordMachine/frontend/src/features/games/gameDetail.test.ts.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: Cannot find module 'w3c-xmlserializer'
+Require stack:
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js
+ ❯ Function._resolveFilename node:internal/modules/cjs/loader:1430:15
+ ❯ defaultResolveImpl node:internal/modules/cjs/loader:1040:19
+ ❯ resolveForCJSWithHooks node:internal/modules/cjs/loader:1045:22
+ ❯ Function._load node:internal/modules/cjs/loader:1216:25
+ ❯ wrapModuleLoad node:internal/modules/cjs/loader:254:19
+ ❯ Module.require node:internal/modules/cjs/loader:1527:12
+ ❯ require node:internal/modules/helpers:147:16
+ ❯ Object.<anonymous> node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js:3:33
+ ❯ Module._compile node:internal/modules/cjs/loader:1781:14
+ ❯ Object..js node:internal/modules/cjs/loader:1913:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'MODULE_NOT_FOUND', requireStack: [ '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js' ] }
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files /home/sunsnow/WordMachine/frontend/src/features/management/management.test.ts.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: Cannot find module 'is-potential-custom-element-name'
+Require stack:
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/helpers/custom-elements.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Attr.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/NamedNodeMap.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js
+ ❯ Function._resolveFilename node:internal/modules/cjs/loader:1430:15
+ ❯ defaultResolveImpl node:internal/modules/cjs/loader:1040:19
+ ❯ resolveForCJSWithHooks node:internal/modules/cjs/loader:1045:22
+ ❯ Function._load node:internal/modules/cjs/loader:1216:25
+ ❯ wrapModuleLoad node:internal/modules/cjs/loader:254:19
+ ❯ Module.require node:internal/modules/cjs/loader:1527:12
+ ❯ require node:internal/modules/helpers:147:16
+ ❯ Object.<anonymous> node_modules/jsdom/lib/jsdom/living/helpers/custom-elements.js:4:38
+ ❯ Module._compile node:internal/modules/cjs/loader:1781:14
+ ❯ Object..js node:internal/modules/cjs/loader:1913:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'MODULE_NOT_FOUND', requireStack: [ '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/helpers/custom-elements.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Attr.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/NamedNodeMap.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js' ] }
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files /home/sunsnow/WordMachine/frontend/src/app/app.test.ts.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: Cannot find module 'w3c-xmlserializer'
+Require stack:
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js
+- /home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js
+ ❯ Function._resolveFilename node:internal/modules/cjs/loader:1430:15
+ ❯ defaultResolveImpl node:internal/modules/cjs/loader:1040:19
+ ❯ resolveForCJSWithHooks node:internal/modules/cjs/loader:1045:22
+ ❯ Function._load node:internal/modules/cjs/loader:1216:25
+ ❯ wrapModuleLoad node:internal/modules/cjs/loader:254:19
+ ❯ Module.require node:internal/modules/cjs/loader:1527:12
+ ❯ require node:internal/modules/helpers:147:16
+ ❯ Object.<anonymous> node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js:3:33
+ ❯ Module._compile node:internal/modules/cjs/loader:1781:14
+ ❯ Object..js node:internal/modules/cjs/loader:1913:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'MODULE_NOT_FOUND', requireStack: [ '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/serialization.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/domparsing/InnerHTML-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/nodes/Element-impl.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/generated/Element.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/living/interfaces.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/jsdom/browser/Window.js', '/home/sunsnow/WordMachine/frontend/node_modules/jsdom/lib/api.js' ] }
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/vitest/dist/chunks/index.1TqnEahn.js:5915:21
+ ❯ EventEmitter.emit node:events:531:35
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5390:22
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+Caused by: Error: Worker exited unexpectedly with exit code 1 during starting state
+ ❯ ChildProcess.emitUnexpectedExit node_modules/vitest/dist/chunks/index.1TqnEahn.js:5388:33
+ ❯ ChildProcess.emit node:events:519:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:293:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  no tests
+      Tests  no tests
+     Errors  16 errors
+   Start at  13:03:04
+   Duration  863ms
+

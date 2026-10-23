@@ -1,0 +1,132 @@
+"""Paginated lobby read model. Commands remain in the shared game service."""
+
+import json
+
+from ..db import reading
+from . import game_names, game_participants, game_rating_policy
+from .auth import public_person
+from .dictionary_multipliers import metadata as multiplier_metadata
+from .errors import ApiError
+from .game import CANCELLED, FINISHED, RUNNING, WAITING, lobby_actions
+from .game_questions import DICTNAME_SQL
+from .game_questions import source as question_source
+from .legacy_game import invalid_data
+from .pagination import ListQuery, page_offset, query_value
+
+STATUS_FILTERS = {
+    'all': None,
+    'waiting': WAITING,
+    'running': RUNNING,
+    'finished': FINISHED,
+    'cancelled': CANCELLED,
+}
+
+
+def status_query(data):
+    value = query_value(data, 'status', 'all')
+    if value not in STATUS_FILTERS:
+        raise ApiError('Invalid game status filter')
+    return value
+
+
+def _active_game(cursor, uid):
+    # Separate indexed relation lookup from the remaining legacy JSON predicate.
+    # Both ignore the current page/filter. Archived JSON cannot establish membership.
+    fields = 'g.id, g.ownerid, g.users, g.participant_mode, g.participant_count'
+    cursor.execute(
+        'SELECT '
+        + fields
+        + """ FROM game_participant p JOIN game g ON g.id = p.game_id
+                      WHERE p.user_id = %s AND g.participant_mode = 1 AND g.status = %s
+                      ORDER BY p.game_id DESC LIMIT 1""",
+        (uid, RUNNING),
+    )
+    normalized = cursor.fetchone()
+    cursor.execute(
+        'SELECT '
+        + fields
+        + """ FROM game g WHERE g.participant_mode = 0 AND g.status = %s
+                      AND JSON_CONTAINS(CASE WHEN JSON_VALID(g.users) THEN g.users ELSE '[]' END, %s) = 1
+                      ORDER BY g.id DESC LIMIT 1""",
+        (RUNNING, json.dumps(uid)),
+    )
+    legacy = cursor.fetchone()
+    candidates = [row for row in (normalized, legacy) if row is not None]
+    if not candidates:
+        return None
+    row = max(candidates, key=lambda candidate: candidate['id'])
+    game_participants.load_many(cursor, [row])
+    if uid not in row['users']:
+        raise invalid_data()
+    return row['id']
+
+
+def list_games(uid, query=ListQuery(), status='all'):
+    if status not in STATUS_FILTERS:
+        raise ApiError('Invalid game status filter')
+    where, params = '1 = 1', []
+    if STATUS_FILTERS[status] is not None:
+        where += ' AND g.status = %s'
+        params.append(STATUS_FILTERS[status])
+    if query.q:
+        where += ' AND ((' + DICTNAME_SQL + ") LIKE %s ESCAPE '!' OR g.name LIKE %s ESCAPE '!')"
+        params.extend([query.like, query.like])
+    source = ' FROM game g LEFT JOIN dict d ON d.id = g.dictid WHERE ' + where
+    with reading() as cursor:
+        # A missing/deleted source dictionary does not remove a game. Without
+        # name search the LEFT JOIN cannot affect the count, so avoid its lookups.
+        count_source = source if query.q else ' FROM game g WHERE ' + where
+        cursor.execute('SELECT COUNT(*) AS total' + count_source, params)
+        pagination = query.metadata(cursor.fetchone()['total'])
+        cursor.execute(
+            'SELECT g.id, g.name, g.version, g.question_mode, g.participant_mode, g.participant_count, '
+            'g.dictid, g.ownerid, g.users, g.status, g.answer_mode, g.perf_mode, g.multiplier_snapshot, g.rated, '
+            'g.rating_model, g.difficulty_snapshot, g.rating_parameters, g.settlement_mode, '
+            + DICTNAME_SQL
+            + ' AS dictname'
+            + source
+            + ' ORDER BY g.id DESC LIMIT %s OFFSET %s',
+            [*params, query.per_page, page_offset(pagination)],
+        )
+        rows = cursor.fetchall()
+        game_participants.load_many(cursor, rows)
+        user_ids = set()
+        for row in rows:
+            question_source(row)
+            if row['status'] not in (WAITING, RUNNING, FINISHED, CANCELLED):
+                raise invalid_data()
+            user_ids.update(row['users'])
+            if row['ownerid'] is not None:
+                user_ids.add(row['ownerid'])
+        users = {}
+        if user_ids:
+            placeholders = ', '.join(['%s'] * len(user_ids))
+            cursor.execute(
+                'SELECT id, username, rating, deleted FROM user WHERE id IN (' + placeholders + ')',
+                sorted(user_ids),
+            )
+            users = {user['id']: public_person(user) for user in cursor.fetchall()}
+        active_game_id = _active_game(cursor, uid)
+    games = []
+    for row in rows:
+        games.append(
+            {
+                'id': row['id'],
+                'version': row['version'],
+                'name': game_names.stored(row),
+                'dictid': row['dictid'],
+                'dictname': row['dictname'],
+                **multiplier_metadata(row),
+                'status': row['status'],
+                'rated': game_rating_policy.rated(row),
+                'owner': users.get(row['ownerid']),
+                # Keep missing references visible; dropping them would change the apparent player count.
+                'users': [
+                    users.get(user_id, {'id': user_id, 'username': None, 'rating': None})
+                    for user_id in row['users']
+                ],
+                'is_joined': uid in row['users'],
+                'actions': lobby_actions(row, uid),
+            }
+        )
+    return {'games': games, 'pagination': pagination, 'active_game_id': active_game_id}
