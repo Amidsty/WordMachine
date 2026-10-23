@@ -17,3 +17,7 @@ frontend/dist/
 frontend/test-results/
 frontend/playwright-report/
 performance-results/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
