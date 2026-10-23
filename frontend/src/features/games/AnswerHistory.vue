@@ -44,7 +44,7 @@ const rows = computed(() => {
           <th scope="col">对应英文</th>
           <th scope="col">已记录结果</th>
           <th scope="col">Perf / 增量</th>
-          <th scope="col">个人 / 全局连击</th>
+          <th scope="col">个人 / 全局连击（作答后）</th>
           <th scope="col">规则版本</th>
         </tr>
       </template>
@@ -72,6 +72,8 @@ const rows = computed(() => {
       label="答题记录分页"
       @page="page = $event"
     />
-    <p class="hint">仅对本次已读取的答题记录分页显示；不重新判题，也不补齐历史缺失字段。</p>
+    <p class="hint">
+      连击列为作答后的值，错误后清零不代表没有惩罚；实际使用的答题前连击及倍率见评分分项。仅对已读取记录分页，不重新判题或补齐历史缺失字段。
+    </p>
   </section>
 </template>

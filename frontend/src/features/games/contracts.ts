@@ -104,7 +104,7 @@ export const gameStateSchema = z
     if (game.scoring) {
       require(
         game.next_answer_perf_rule_version ===
-          ([-1, 0].includes(game.status) ? 'weighted-perf-v1' : null),
+          ([-1, 0].includes(game.status) ? game.scoring.perf_version : null),
       )
       require(game.scoring.answers.length === game.result.length)
       game.scoring.answers.forEach((a, i) =>
@@ -134,13 +134,21 @@ export const gameStateSchema = z
           )
         }
       }
-      require(game.result.every((a) => a.rating_version === 'weighted-perf-v1'))
+      require(game.result.every((a) => a.rating_version === game.scoring?.perf_version))
       require(
         game.scoring.players.length === ([0, 1].includes(game.status) ? game.users.length : 0),
       )
     } else {
-      require(game.next_answer_perf_rule_version !== 'weighted-perf-v1')
-      require(!game.result.some((a) => a.rating_version === 'weighted-perf-v1'))
+      require(
+        !['weighted-perf-v1', 'weighted-perf-v2'].includes(
+          game.next_answer_perf_rule_version ?? '',
+        ),
+      )
+      require(
+        !game.result.some((a) =>
+          ['weighted-perf-v1', 'weighted-perf-v2'].includes(a.rating_version ?? ''),
+        ),
+      )
     }
     const unique = (ids: number[]) => new Set(ids).size === ids.length
     require(game.total_words === game.words.length)

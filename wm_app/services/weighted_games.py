@@ -1,4 +1,4 @@
-"""Transactional adapter for weighted-perf-v1. Caller owns game -> sorted user locks.
+"""Versioned transactional adapter for weighted-perf-v1/v2. Caller owns game -> sorted user locks.
 
 No commits, migrations, account adoption or historical repair. Read validation
 uses frozen facts; never today's dictionary, account rating or fresh randomness.
@@ -12,7 +12,19 @@ from datetime import datetime
 from pymysql import IntegrityError
 
 from . import weighted_rating as engine
+from . import weighted_rating_v2 as engine_v2
 from .errors import GameError
+
+NEW_MODEL = 2
+PERF_VERSIONS = (engine.PERF_VERSION, engine_v2.PERF_VERSION)
+RATING_VERSIONS = (engine.RATING_VERSION, engine_v2.RATING_VERSION)
+
+
+def rules(game):
+    mode = game.get('rating_model', 1)
+    if type(mode) is not int or mode not in (1, 2):
+        raise invalid()
+    return engine if mode == 1 else engine_v2
 
 
 def invalid():
@@ -31,7 +43,31 @@ def exact(value):
     return value
 
 
-def parameters():
+def parameters(model=1):
+    if type(model) is not int or model not in (1, 2):
+        raise invalid()
+    if model == 2:
+        return exact(
+            dict(
+                perf_version=engine_v2.PERF_VERSION,
+                rating_version=engine_v2.RATING_VERSION,
+                bonus_version=engine.BONUS_VERSION,
+                bonuses=list(engine.BONUSES),
+                difficulty_extra=0.25,
+                difficulty_scale=800,
+                alpha=0.5,
+                delta_max=200,
+                high_threshold=1500,
+                high_scale=1000,
+                up_min=0.75,
+                down_max=1.25,
+                reward_extra=0.30,
+                reward_tau=10,
+                penalty_extra=2.0,
+                penalty_tau=8,
+                global_protection_min=0.5,
+            )
+        )
     return exact(
         dict(
             perf_version=engine.PERF_VERSION,
@@ -65,7 +101,7 @@ def decoded(value):
 
 def enabled(game):
     mode = game.get('rating_model', 0)
-    if type(mode) is not int or mode not in (0, 1):
+    if type(mode) is not int or mode not in (0, 1, 2):
         raise invalid()
     if not mode:
         if game.get('difficulty_snapshot') is not None or game.get('rating_parameters') is not None:
@@ -84,7 +120,7 @@ def enabled(game):
                 'perf_mode',
             )
         )
-        or decoded(game.get('rating_parameters')) != decoded(parameters())
+        or decoded(game.get('rating_parameters')) != decoded(parameters(mode))
     ):
         raise invalid()
     return True
@@ -94,7 +130,10 @@ def _snapshot(game, row):
     try:
         if type(row['newcomer_enabled']) is not int or row['newcomer_enabled'] not in (0, 1):
             raise invalid()
-        snap = engine.Snapshot(
+        selected = rules(game)
+        if row['rule_version'] != selected.RATING_VERSION:
+            raise invalid()
+        snap = selected.Snapshot(
             row['public_rating'],
             row['remaining_bonus'],
             row['completed_games'],
@@ -171,7 +210,7 @@ def start(cursor, game, users):
         user = users[uid]
         current = state(cursor, uid)
         rating_events.current(cursor, user)
-        snap = engine.Snapshot(
+        snap = rules(game).Snapshot(
             user['rating'],
             current['remaining_bonus'],
             current['completed_games'],
@@ -193,7 +232,7 @@ def start(cursor, game, users):
                     ) from None
                 raise
         cursor.execute(
-            'INSERT INTO game_rating_snapshot (game_id,user_id,public_rating,remaining_bonus,completed_games,newcomer_enabled,difficulty,multiplier,internal_rating,streak_protection,rating_protection,speed_up,speed_down,event_id,recorded_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+            'INSERT INTO game_rating_snapshot (game_id,user_id,public_rating,remaining_bonus,completed_games,newcomer_enabled,difficulty,multiplier,internal_rating,streak_protection,rating_protection,speed_up,speed_down,event_id,recorded_at,rule_version) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
             (
                 game['id'],
                 uid,
@@ -209,6 +248,7 @@ def start(cursor, game, users):
                 *snap.speed_factors,
                 user['rating_event_id'],
                 datetime.utcnow(),
+                rules(game).RATING_VERSION,
             ),
         )
 
@@ -231,13 +271,13 @@ def score_fields(score, snapshot):
     )
 
 
-def core_fields(score):
+def core_fields(score, game=None):
     return dict(
         usercombo=score.self_after,
         globalcombo=score.global_after,
         perf_delta=score.perf_delta,
         perf=score.after.perf,
-        rating_version=engine.PERF_VERSION,
+        rating_version=rules(game or {}).PERF_VERSION,
     )
 
 
@@ -264,15 +304,15 @@ def validate_answers(game, snapshots, rows):
             row['game_id'] != game['id']
             or row['position'] != position
             or row['user_id'] != uid
-            or entry['rating_version'] != engine.PERF_VERSION
+            or entry['rating_version'] != rules(game).PERF_VERSION
         ):
             raise invalid()
         try:
             answer = engine.AnswerInput(entry['result'], row['draw'], global_before)
-            score = engine.score_answer(states[uid], previous[uid], answer)
+            score = rules(game).score_answer(states[uid], previous[uid], answer)
         except (ValueError, KeyError, TypeError):
             raise invalid() from None
-        if any(entry.get(k) != v for k, v in core_fields(score).items()) or any(
+        if any(entry.get(k) != v for k, v in core_fields(score, game).items()) or any(
             row.get(k) != v for k, v in score_fields(score, states[uid]).items()
         ):
             raise invalid()
@@ -315,7 +355,7 @@ def answer(cursor, game, uid, correct):
     global_before = game['result'][-1]['globalcombo'] if game['result'] else 0
     # Only called after game/user locks, active-actor checks and turn validation.
     fact = engine.AnswerInput(correct, random.SystemRandom().randint(5, 15), global_before)
-    score = engine.score_answer(snapshot, previous, fact)
+    score = rules(game).score_answer(snapshot, previous, fact)
     return score
 
 
@@ -364,7 +404,7 @@ def proposals(cursor, game, users):
     result = {}
     for uid, snapshot in game['_weighted_snapshots'].items():
         try:
-            proposal = engine.settlement_proposal(
+            proposal = rules(game).settlement_proposal(
                 snapshot, game['_weighted_inputs'][uid], rated=bool(game['rated']), finished=True
             )
         except ValueError:
@@ -419,7 +459,7 @@ def validate_results(game, sources, results, awards):
     if game['status'] == 1 and game['rated']:
         for uid, snapshot in game['_weighted_snapshots'].items():
             try:
-                p = engine.settlement_proposal(
+                p = rules(game).settlement_proposal(
                     snapshot, game['_weighted_inputs'][uid], rated=True, finished=True
                 )
             except ValueError:
@@ -439,7 +479,7 @@ def validate_results(game, sources, results, awards):
         if (
             row['game_id'] != game['id']
             or row['rating_id'] != src['id']
-            or src.get('rule_version') != engine.RATING_VERSION
+            or src.get('rule_version') != rules(game).RATING_VERSION
             or src['rating_before'] != snap.public_rating
             or src['rating_after'] != p.public_after
             or src['delta'] != p.competitive.delta + p.bonus
@@ -490,7 +530,7 @@ def public_game(game):
         return None
     players = []
     for uid, snap in game.get('_weighted_snapshots', {}).items():
-        ev = engine.evidence(snap, game['_weighted_inputs'][uid])
+        ev = rules(game).evidence(snap, game['_weighted_inputs'][uid])
         players.append(
             dict(
                 user_id=uid,
@@ -503,6 +543,15 @@ def public_game(game):
                 rating_protection=snap.rating_protection,
                 speed_up=snap.speed_factors[0],
                 speed_down=snap.speed_factors[1],
+                **(
+                    dict(
+                        difficulty_up=snap.difficulty_factors[0],
+                        difficulty_down=snap.difficulty_factors[1],
+                        global_protection=snap.global_protection,
+                    )
+                    if game['rating_model'] == 2
+                    else {}
+                ),
                 answered_count=ev.answered_count,
                 raw_points=10 * (ev.correct_weight - ev.wrong_weight)
                 if ev.answered_count
@@ -512,9 +561,9 @@ def public_game(game):
             )
         )
     return dict(
-        model='weighted-v1',
-        perf_version=engine.PERF_VERSION,
-        rating_version=engine.RATING_VERSION,
+        model='weighted-v2' if game['rating_model'] == 2 else 'weighted-v1',
+        perf_version=rules(game).PERF_VERSION,
+        rating_version=rules(game).RATING_VERSION,
         difficulty=game['difficulty_snapshot'],
         players=players,
         answers=game.get('_weighted_public_answers', []),
@@ -582,7 +631,10 @@ def validate_source(source, snapshot_row, result, award):
     try:
         if not snapshot_row or not result:
             raise invalid()
+        if source.get('rule_version') not in RATING_VERSIONS:
+            raise invalid()
         pseudo_game = dict(
+            rating_model=1 if source['rule_version'] == engine.RATING_VERSION else 2,
             difficulty_snapshot=snapshot_row['difficulty'],
             multiplier_snapshot=snapshot_row['multiplier'],
         )
@@ -592,10 +644,13 @@ def validate_source(source, snapshot_row, result, award):
         ev = engine.Evidence(**data['evidence'])
         engine.integer(ev.answered_count, 1, engine.MAX_RATING)
         engine.integer(ev.self_streak, 0, ev.answered_count)
-        expected_perf = engine.performance(snap, ev.correct_weight, ev.wrong_weight)
+        selected = rules(pseudo_game)
+        expected_perf = selected.performance(snap, ev.correct_weight, ev.wrong_weight)
         if ev.correct_weight + ev.wrong_weight <= 0 or ev.perf != expected_perf:
             raise invalid()
-        change = engine.competitive_change(snap, expected_perf, ev.correct_weight, ev.wrong_weight)
+        change = selected.competitive_change(
+            snap, expected_perf, ev.correct_weight, ev.wrong_weight
+        )
         p = engine.SettlementProposal(
             True,
             ev,
@@ -642,9 +697,7 @@ def validate_source(source, snapshot_row, result, award):
 
 
 def check_sources(cursor, sources, *, current=False):
-    sources = [
-        s for s in sources if s is not None and s.get('rule_version') == engine.RATING_VERSION
-    ]
+    sources = [s for s in sources if s is not None and s.get('rule_version') in RATING_VERSIONS]
     if not sources:
         return
     if current:

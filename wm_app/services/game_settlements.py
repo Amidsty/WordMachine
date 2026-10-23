@@ -7,7 +7,7 @@ The caller owns the game lock and ascending user locks; no commit/DDL here.
 import math
 from datetime import datetime
 
-from . import game_rating_policy, rating_events, weighted_games, weighted_rating
+from . import game_rating_policy, rating_events, weighted_games
 from .errors import GameError
 from .legacy_game import invalid_data, json_list
 from .rating import MAX_RATING, MIN_RATING, RATING_VERSION, rating_delta
@@ -46,7 +46,7 @@ def final_perfs(game):
 def validate_header(header):
     if (
         header.get('rating_version')
-        not in ('legacy-v1', weighted_rating.RATING_VERSION, game_rating_policy.UNRATED_VERSION)
+        not in ('legacy-v1', *weighted_games.RATING_VERSIONS, game_rating_policy.UNRATED_VERSION)
         or (
             header.get('rating_version') == game_rating_policy.UNRATED_VERSION
             and header.get('rated_count') != 0
@@ -62,7 +62,7 @@ def validate_header(header):
 def validate_entry(row):
     if row.get('rule_version', RATING_VERSION) not in (
         RATING_VERSION,
-        weighted_rating.RATING_VERSION,
+        *weighted_games.RATING_VERSIONS,
     ):
         raise invalid_settlement()
     for field in ('id', 'game_id', 'user_id'):
@@ -100,7 +100,11 @@ def validate_rows(game, header, rows):
     except GameError:
         raise invalid_settlement() from None
     expected_rule = (
-        (weighted_rating.RATING_VERSION if weighted_games.enabled(game) else RATING_VERSION)
+        (
+            weighted_games.rules(game).RATING_VERSION
+            if weighted_games.enabled(game)
+            else RATING_VERSION
+        )
         if rated
         else game_rating_policy.UNRATED_VERSION
     )
@@ -163,7 +167,7 @@ def settle(cursor, game, users):
     rated = game_rating_policy.rated(game)
     weighted = weighted_games.enabled(game)
     proposals = weighted_games.proposals(cursor, game, users) if weighted else {}
-    rule = weighted_rating.RATING_VERSION if weighted else RATING_VERSION
+    rule = weighted_games.rules(game).RATING_VERSION if weighted else RATING_VERSION
     for uid in sorted(perfs) if rated else ():
         user = users[uid]
         history = legacy_history(user['ratinghistory'])
@@ -229,7 +233,7 @@ def merge_history(user, rows, events=()):
         validate_header(row)
         if (
             not game_rating_policy.rated(row)
-            or row['rating_version'] not in (RATING_VERSION, weighted_rating.RATING_VERSION)
+            or row['rating_version'] not in (RATING_VERSION, *weighted_games.RATING_VERSIONS)
             or row.get('rule_version', RATING_VERSION) != row['rating_version']
             or row['user_id'] != user['id']
             or row['game_id'] in seen

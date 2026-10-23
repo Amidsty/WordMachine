@@ -5,7 +5,7 @@ export const perfPolicyFields = {
   // Compatibility multiplier-policy family; individual answers retain their own versions.
   perf_rule_version: z.enum(['legacy-v1', 'dict-perf-v1']).optional(),
   next_answer_perf_rule_version: z
-    .enum(['perf-v2', 'dict-perf-v2', 'weighted-perf-v1'])
+    .enum(['perf-v2', 'dict-perf-v2', 'weighted-perf-v1', 'weighted-perf-v2'])
     .nullable()
     .optional(),
   multiplier_snapshot: multiplierSchema.nullable().optional(),

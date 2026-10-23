@@ -23,7 +23,7 @@ export const ratingHistorySchema = common
     newcomer_bonus: z.number().int().min(0).max(600).nullable().optional(),
   })
   .refine((row) =>
-    row.rule_version === 'weighted-rating-v1'
+    ['weighted-rating-v1', 'weighted-rating-v2'].includes(row.rule_version ?? '')
       ? row.source === 'game' &&
         row.competitive_delta != null &&
         row.newcomer_bonus != null &&

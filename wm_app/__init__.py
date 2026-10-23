@@ -66,7 +66,7 @@ def create_app(config=None):
             with reading() as cursor:
                 cursor.execute('SELECT version_num FROM alembic_version')
                 versions = {row['version_num'] for row in cursor.fetchall()}
-                if versions != {'0017_weighted_rating'}:
+                if versions != {'0018_bounded_rating'}:
                     return jsonify(status='migration_required'), 503
             return jsonify(status='ok')
         except Exception:

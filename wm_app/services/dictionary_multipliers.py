@@ -59,7 +59,7 @@ def game_multiplier(game):
 
 
 def metadata(game):
-    from . import weighted_games, weighted_rating
+    from . import weighted_games
 
     multiplier = game_multiplier(game)
     weighted = weighted_games.enabled(game)
@@ -68,7 +68,7 @@ def metadata(game):
         # that all answers share one formula. Each answer records its own version.
         'perf_rule_version': PERF_VERSION if multiplier is not None else RATING_VERSION,
         'next_answer_perf_rule_version': (
-            weighted_rating.PERF_VERSION
+            weighted_games.rules(game).PERF_VERSION
             if weighted
             else (MULTIPLIED_PERF_VERSION if multiplier is not None else CUMULATIVE_PERF_VERSION)
         )

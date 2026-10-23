@@ -67,7 +67,11 @@ const participantCount = computed(() => participantIds(props.game).size)
     <p v-else class="notice notice-info">
       旧对局：题目来自现有词典，可能与原题不同，尚未恢复历史快照。
     </p>
-    <p v-if="game.next_answer_perf_rule_version === 'weighted-perf-v1'" class="hint">
+    <p v-if="game.scoring?.model === 'weighted-v2'" class="hint">
+      有界累计 Perf
+      v2：词典倍率线性缩放单题增量，难度系数限于0.75–1.25；全局连击中断惩罚增强，新手保留反馈。高分系数仅用于竞技结算。
+    </p>
+    <p v-else-if="game.next_answer_perf_rule_version === 'weighted-perf-v1'" class="hint">
       后续使用加权 Perf：个人连击奖励、房间全局连击中断惩罚；新手额度与竞技 Rating 分开结算。
     </p>
     <p v-else-if="game.next_answer_perf_rule_version" class="hint">

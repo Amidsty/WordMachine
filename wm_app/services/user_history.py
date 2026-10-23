@@ -113,7 +113,8 @@ def rating_rows(cursor, user, query):
     weighted = [
         row['game_id']
         for row in selected
-        if row['source'] == 'game' and versions.get(row['game_id']) == 'weighted-rating-v1'
+        if row['source'] == 'game'
+        and versions.get(row['game_id']) in weighted_games.RATING_VERSIONS
     ]
     parts = grouped(cursor, 'weighted_result', weighted, 'game_id, user_id') if weighted else {}
     for row in selected:
@@ -123,7 +124,7 @@ def rating_rows(cursor, user, query):
             else ('manual-v1' if row['source'] == 'manual' else None)
         )
         part = next((p for p in parts.get(row['game_id'], []) if p['user_id'] == user['id']), None)
-        if row['rule_version'] == 'weighted-rating-v1' and part is None:
+        if row['rule_version'] in weighted_games.RATING_VERSIONS and part is None:
             raise weighted_games.invalid()
         row['competitive_delta'] = part['competitive_delta'] if part else None
         row['newcomer_bonus'] = part['newcomer_bonus'] if part else None

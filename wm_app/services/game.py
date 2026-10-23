@@ -261,7 +261,7 @@ def _create(cursor, game, uid, payload):
     cursor.execute(
         """INSERT INTO game (dictid, users, wordlist, result, status, ownerid, version, question_mode, dictname_snapshot,
                              participant_mode, participant_count, answer_mode, answer_count, settlement_mode, perf_mode, multiplier_snapshot, rated, rating_model, difficulty_snapshot, rating_parameters)
-           VALUES (%s, NULL, %s, NULL, %s, %s, 0, 1, %s, 1, 1, 1, 0, 1, 1, %s, %s, 1, %s, %s)""",
+           VALUES (%s, NULL, %s, NULL, %s, %s, 0, 1, %s, 1, 1, 1, 0, 1, 1, %s, %s, %s, %s, %s)""",
         (
             dict_id,
             manifest,
@@ -270,8 +270,9 @@ def _create(cursor, game, uid, payload):
             name,
             multiplier,
             int(payload.get('rated', True)),
+            weighted_games.NEW_MODEL,
             difficulty,
-            json.dumps(weighted_games.parameters()),
+            json.dumps(weighted_games.parameters(weighted_games.NEW_MODEL)),
         ),
     )
     game_id = cursor.lastrowid
@@ -365,7 +366,7 @@ def _answer(cursor, game, uid, payload):
     if weighted_games.enabled(game):
         weighted_games.check_current(cursor, game, users)
         weighted_score = weighted_games.answer(cursor, game, uid, correct)
-        scoring = weighted_games.core_fields(weighted_score)
+        scoring = weighted_games.core_fields(weighted_score, game)
     else:
         scoring = score_answer(
             rating=user['rating'],

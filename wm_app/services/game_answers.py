@@ -55,7 +55,7 @@ def _entry(game, index, row):
     )
     weighted = weighted_games.enabled(game)
     if weighted:
-        expected_rules = (weighted_rating.PERF_VERSION,)
+        expected_rules = (weighted_games.rules(game).PERF_VERSION,)
     if (
         row.get('game_id') != game['id']
         or type(row.get('position')) is not int
@@ -120,16 +120,25 @@ def validate_rows(game, rows):
     ):
         raise invalid_answers()
     entries = [_entry(game, index, row) for index, row in enumerate(rows)]
-    validate_rule_order(entries, weighted=weighted_games.enabled(game))
+    validate_rule_order(
+        entries,
+        weighted=weighted_games.enabled(game),
+        perf_version=weighted_games.rules(game).PERF_VERSION
+        if weighted_games.enabled(game)
+        else None,
+    )
     return entries
 
 
-def validate_rule_order(entries, *, weighted=False):
+def validate_rule_order(entries, *, weighted=False, perf_version=None):
     if weighted:
-        if any(e.get('rating_version') != weighted_rating.PERF_VERSION for e in entries):
+        expected = perf_version or weighted_rating.PERF_VERSION
+        if expected not in weighted_games.PERF_VERSIONS or any(
+            e.get('rating_version') != expected for e in entries
+        ):
             raise invalid_answers()
         return
-    if any(e.get('rating_version') == weighted_rating.PERF_VERSION for e in entries):
+    if any(e.get('rating_version') in weighted_games.PERF_VERSIONS for e in entries):
         raise invalid_answers()
     cumulative = False
     for entry in entries:

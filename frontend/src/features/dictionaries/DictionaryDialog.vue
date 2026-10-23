@@ -150,7 +150,7 @@ async function submit() {
             label="Perf 倍率"
             required
             :maxlength="16"
-            hint="0.10–5.00，最多两位小数；新模型用于答题证据权重，不直接乘 Perf 差。"
+            hint="0.10–5.00，最多两位小数；v2线性缩放单题Perf增量，v1仅缩放证据权重；旧局按冻结版本计算。"
           />
           <FormField
             v-if="mode === 'multiplier'"

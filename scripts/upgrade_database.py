@@ -1,4 +1,4 @@
-"""Explicit 0011..0017 upgrade; default is a read-only version/plan check.
+"""Explicit 0011..0018 upgrade; default is a read-only version/plan check.
 
 Uses explicit WM_DB_HOST/PORT/NAME/USER/PASSWORD, never local-launcher settings.
 Backups, restoring a copy and stopping ALL writers are operator prerequisites.
@@ -32,9 +32,14 @@ REVISIONS = (
     '0015_dictionary_promotions',
     '0016_game_names',
     '0017_weighted_rating',
+    '0018_bounded_rating',
 )
 TARGET = REVISIONS[-1]
 ADDITIONS = {
+    '0018_bounded_rating': {
+        'tables': (),
+        'columns': {'game_rating_snapshot': {'rule_version': 'weighted-rating-v1'}},
+    },
     '0012_manual_rating': {
         'tables': ('rating_adjustment_request', 'manual_rating'),
         'columns': {'rating_event': {'manual_rating_id': None}},
@@ -127,7 +132,7 @@ def migration_plan(current, target):
             raise UpgradeError('Unexpected migration chain; review source before upgrading')
     if current not in REVISIONS:
         raise UpgradeError(
-            'Only intact 0011..0017 databases are supported; no initialization or adoption'
+            'Only intact 0011..0018 databases are supported; no initialization or adoption'
         )
     if target not in REVISIONS or REVISIONS.index(target) < REVISIONS.index(current):
         raise UpgradeError('Downgrade is not supported')
@@ -251,6 +256,21 @@ def verify_preserved(connection, original, applied):
                 raise UpgradeError(
                     'Unexpected values in a newly added column; keep writers stopped'
                 )
+    if '0018_bounded_rating' in applied:
+        from wm_app.models import weighted_v2
+
+        expected = {(table, new) for table, _, new, _ in weighted_v2.REPLACEMENTS}
+        expected.add(('game_rating_snapshot', 'ck_weighted_snapshot_rule_v2'))
+        actual = {
+            (row[0], row[1])
+            for row in connection.exec_driver_sql(
+                "SELECT TABLE_NAME,CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND CONSTRAINT_TYPE='CHECK' AND ENFORCED='YES'"
+            )
+        }
+        if not expected <= actual or any(
+            (table, old) in actual for table, old, _, _ in weighted_v2.REPLACEMENTS
+        ):
+            raise UpgradeError('Bounded scoring CHECKs require review; keep writers stopped')
     connection.rollback()
     return after
 

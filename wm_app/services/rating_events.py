@@ -45,7 +45,7 @@ def validate(row):
         raise invalid_event()
     if row.get('kind') == 'game':
         if (
-            row.get('rule_version') not in ('legacy-v1', 'weighted-rating-v1')
+            row.get('rule_version') not in ('legacy-v1', 'weighted-rating-v1', 'weighted-rating-v2')
             or not _positive(row.get('game_rating_id'))
             or row.get('manual_rating_id') is not None
         ):
@@ -222,7 +222,7 @@ def append_game(
     *,
     rule_version='legacy-v1',
 ):
-    if rule_version not in ('legacy-v1', 'weighted-rating-v1'):
+    if rule_version not in ('legacy-v1', 'weighted-rating-v1', 'weighted-rating-v2'):
         raise invalid_event()
     cursor.execute(
         'INSERT INTO rating_event (user_id, sequence, previous_id, legacy_rating_id, game_rating_id, kind, rule_version, rating_before, delta, rating_after, recorded_at) '

@@ -24,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import DATETIME, DOUBLE, LONGTEXT, VARCHAR
 from sqlalchemy.orm import DeclarativeBase
 
-from . import weighted_v1
+from . import weighted_v2
 
 
 class Base(DeclarativeBase):
@@ -263,7 +263,7 @@ class Game(Base):
             name='ck_game_multiplier',
         ),
         CheckConstraint('version >= 0', name='ck_game_version'),
-        CheckConstraint(weighted_v1.MODEL_CHECK, name='ck_game_rating_model'),
+        CheckConstraint(weighted_v2.MODEL_CHECK, name='ck_game_rating_model_v2'),
         CheckConstraint(
             'name IS NULL OR CHAR_LENGTH(TRIM(name)) BETWEEN 1 AND 100', name='ck_game_name'
         ),
@@ -380,8 +380,8 @@ class GameSettlement(Base):
     __table_args__ = (
         CheckConstraint('rated_count >= 0', name='ck_settlement_count'),
         CheckConstraint(
-            weighted_v1.SETTLEMENT_CHECK,
-            name='ck_settlement_rating_policy',
+            weighted_v2.SETTLEMENT_CHECK,
+            name='ck_settlement_rating_policy_v2',
         ),
         {'mysql_engine': 'InnoDB'},
     )
@@ -408,9 +408,7 @@ class GameRating(Base):
     __table_args__ = (
         UniqueConstraint('game_id', 'user_id', name='uq_rating_game_user'),
         UniqueConstraint('id', 'game_id', 'user_id', name='uq_rating_weighted_identity'),
-        CheckConstraint(
-            "rule_version IN ('legacy-v1','weighted-rating-v1')", name='ck_rating_rule'
-        ),
+        CheckConstraint(weighted_v2.RULE_CHECK, name='ck_rating_rule_v2'),
         CheckConstraint(
             'rating_after = CAST(rating_before AS DECIMAL(20, 0)) + delta',
             name='ck_rating_arithmetic',
@@ -462,8 +460,8 @@ class RatingEvent(Base):
         ),
         CheckConstraint('sequence >= 1', name='ck_event_sequence'),
         CheckConstraint(
-            weighted_v1.EVENT_CHECK,
-            name='ck_event_source',
+            weighted_v2.EVENT_CHECK,
+            name='ck_event_source_v2',
         ),
         CheckConstraint(
             '(sequence = 1 AND previous_id IS NULL) OR (sequence > 1 AND previous_id IS NOT NULL AND legacy_rating_id IS NULL)',
@@ -563,4 +561,4 @@ class AuthRateLimit(Base):
     __table_args__ = (Index('ix_rate_window', 'window_started'), {'mysql_engine': 'InnoDB'})
 
 
-weighted_v1.tables(Base.metadata)
+weighted_v2.tables(Base.metadata)

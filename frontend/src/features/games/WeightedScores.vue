@@ -15,7 +15,12 @@ defineProps<{ game: GameState }>()
         规则：{{ game.scoring.perf_version }} / {{ game.scoring.rating_version }} · 冻结难度 D：{{
           game.scoring.difficulty
         }}
+        · 冻结词典倍率 M：{{ game.multiplier_snapshot }}
       </p>
+      <p v-if="game.scoring.model === 'weighted-v2'" class="hint">
+        v2是受控累计表现，不再使用对数赔率反推；同一作答序列的Perf偏移与词典倍率成正比。难度仅作0.75–1.25倍修正，无额外动态高Perf扣分。长局仍会累计，单题有界不等于整局Perf有固定上限。
+      </p>
+      <p v-else class="hint">v1历史规则可能在极端难度下大幅波动；保留原值，不按v2重算。</p>
       <p class="hint">
         原始局分不等于 Perf；公开 Rating 总变化 = 竞技变化 +
         新手额度。额度总额1500分六场释放，不是每场补到1500。高分涨/跌系数仅调整竞技变化，不调整额度。服务端保存完整精度，以下小数仅用于展示。
@@ -44,6 +49,12 @@ defineProps<{ game: GameState }>()
         </p>
         <p>
           冻结涨分系数：{{ p.speed_up.toFixed(4) }} · 冻结扣分系数：{{ p.speed_down.toFixed(4) }}
+        </p>
+        <p v-if="game.scoring.model === 'weighted-v2'">
+          冻结难度涨/扣系数：{{ p.difficulty_up?.toFixed(4) }} /
+          {{ p.difficulty_down?.toFixed(4) }} · 全局连击反馈：{{
+            p.global_protection?.toFixed(2)
+          }}（新手也不归零）
         </p>
         <p>
           原始局分：{{ p.answered_count ? storedPerf(p.raw_points) : '未作答' }} · Perf：{{
