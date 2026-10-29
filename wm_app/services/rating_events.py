@@ -92,6 +92,10 @@ def _match_source(event, source):
             or not isinstance(source.get('reason'), str)
             or not 1 <= len(source['reason'].strip()) <= 500
             or len(source['reason']) > 500
+            or any(
+                type(source.get(key, 0)) is not int or source.get(key, 0) not in (0, 1)
+                for key in ('publish_reason', 'publish_actor')
+            )
             or source['delta'] == 0
             or source['recorded_at'] != event['recorded_at']
             or (

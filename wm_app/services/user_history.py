@@ -1,4 +1,7 @@
-"""Public score projections only; never expose raw archives or manual audit details.
+"""Public score projections; only explicitly opted-in manual metadata is public.
+
+Hidden reasons/actors are omitted from the response, not merely hidden by the UI.
+Raw archives, request UUIDs, event heads and private audits are never projected.
 
 All reads share one MVCC snapshot. Rating validates the complete existing ledger;
 Perf batches and validates the selected finished-game page, without English lookup.
@@ -99,6 +102,12 @@ def rating_rows(cursor, user, query):
                 'after': event['rating_after'],
             }
         )
+        if event['kind'] == 'manual':
+            manual = event['_manual_source']  # Validated by load_many/merge_history.
+            if manual.get('publish_reason', 0) == 1:
+                rows[-1]['reason'] = manual['reason']
+            if manual.get('publish_actor', 0) == 1:
+                rows[-1]['actor_id'] = manual['actor_id']
     pagination = query.metadata(len(rows))
     offset = page_offset(pagination)
     selected = list(reversed(rows))[offset : offset + query.per_page]

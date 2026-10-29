@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, onScopeDispose, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import { ApiError } from '../shared/api/client'
 import { useFormTask } from '../shared/forms/useFormTask'
 import NoticeBanner from '../shared/ui/NoticeBanner.vue'
-import UserLink from '../shared/ui/UserLink.vue'
+import AppNavigation from './AppNavigation.vue'
 import UserMenu from '../features/users/UserMenu.vue'
 import { useServices } from './services'
 import { afterLoginTarget } from './navigation'
@@ -14,14 +14,33 @@ const route = useRoute()
 const router = useRouter()
 const user = computed(() => services.client.session.value?.user)
 const logoutTask = useFormTask()
+let logoutController: AbortController | undefined
+let logoutOrigin: { path: string; identity: string } | undefined
+let logoutExitPath: string | undefined
+onScopeDispose(() => logoutController?.abort())
 const identityKey = computed(
   () =>
     `${user.value?.id ?? 'anonymous'}:${user.value?.type ?? ''}:${user.value?.admin_level ?? 0}:${services.client.session.value?.csrf_token ?? ''}`,
 )
 watch(
   [() => route.path, identityKey],
-  () => {
+  ([path], [previousPath, previousIdentity]) => {
+    // The server may revoke Socket/read access before the logout reply arrives.
+    // Keep only this deliberate exit's destination, never its private content.
+    if (
+      logoutOrigin &&
+      !user.value &&
+      path === logoutOrigin.path &&
+      previousPath === path &&
+      previousIdentity === logoutOrigin.identity
+    )
+      logoutExitPath = path
+    else if (user.value || path !== logoutExitPath) logoutExitPath = undefined
+    logoutOrigin = undefined
     services.userMenuTarget.value = null
+    services.navigationMenu.value = null
+    logoutController?.abort()
+    logoutTask.error.value = ''
   },
   { flush: 'sync' },
 )
@@ -30,43 +49,46 @@ watch(user, (next) => {
   // Deliberate logout/password change owns its destination and explanatory notice.
   const reason = services.client.sessionEndReason.value
   if (reason === 'logout' || reason === 'password_changed') return
-  if (!next && route.meta.authenticated)
-    void router.replace({ name: 'login', query: { next: afterLoginTarget(route.path) } })
+  if (!next && (route.meta.authenticated || logoutExitPath === route.path))
+    void router.replace(
+      logoutExitPath === route.path
+        ? { name: 'login' }
+        : { name: 'login', query: { next: afterLoginTarget(route.path) } },
+    )
   else if (next && route.meta.root && (next.admin_level ?? 0) === 0)
     void router.replace({ name: 'management', query: { denied: '1' } })
 })
 
 async function logout() {
   await logoutTask.run(async () => {
+    const path = route.path
+    const controller = new AbortController()
+    const origin = { path, identity: identityKey.value }
+    logoutOrigin = origin
+    logoutController = controller
     try {
-      await services.auth.logout()
+      await services.auth.logout(controller.signal)
     } catch (error) {
+      if (controller.signal.aborted) return
       if (!(error instanceof ApiError) || error.code !== 'unauthenticated') throw error
+    } finally {
+      if (logoutOrigin === origin) logoutOrigin = undefined
     }
-    await router.replace({ name: 'login' })
+    // A new identity or explicit navigation owns its destination. Aborting a
+    // request does not promise that the server rolled back the logout.
+    if (!user.value && route.path === path) await router.replace({ name: 'login' })
   })
 }
 </script>
 
 <template>
   <a class="skip-link" href="#main">跳到主要内容</a>
-  <header class="site-header">
-    <RouterLink to="/" class="brand">WordMachine</RouterLink>
-    <nav aria-label="主导航">
-      <RouterLink to="/">主页</RouterLink>
-      <RouterLink to="/leaderboard/">排行榜</RouterLink>
-      <RouterLink to="/admin/">管理</RouterLink>
-      <RouterLink to="/changepw/">修改资料</RouterLink>
-      <template v-if="user">
-        <RouterLink to="/game-end-requests/">结束请求</RouterLink>
-        <UserLink :id="user.id" :name="user.username" :rating="user.rating" />
-        <button type="button" class="button" :disabled="logoutTask.pending.value" @click="logout">
-          登出
-        </button>
-      </template>
-      <RouterLink v-else to="/login/">登录</RouterLink>
-    </nav>
-  </header>
+  <AppNavigation
+    :key="identityKey"
+    :user="user ?? null"
+    :pending="logoutTask.pending.value"
+    @logout="logout"
+  />
   <main id="main" class="page-content">
     <NoticeBanner :message="services.sessionError.value" />
     <NoticeBanner :message="logoutTask.error.value" />

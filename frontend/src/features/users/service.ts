@@ -44,6 +44,8 @@ export const ratingReviewSchema = successSchema.extend({
       game_id: z.number().int().positive().nullable(),
       actor_id: z.number().int().positive().nullable(),
       reason: z.string().nullable(),
+      publish_reason: z.boolean().optional(),
+      publish_actor: z.boolean().optional(),
       recorded_at: z.string(),
     }),
   ),
@@ -55,6 +57,8 @@ export type RatingIntent = Readonly<{
   expected_event_id: string | null
   new_rating: number
   reason: string
+  publish_reason: boolean
+  publish_actor: boolean
 }>
 
 export function createUserManagementService(client: ApiClient) {
@@ -92,6 +96,14 @@ export function createUserManagementService(client: ApiClient) {
           rating_after: z.literal(intent.new_rating),
           delta: z.literal(intent.new_rating - intent.expected_rating),
           rating_event_id: eventId,
+          publish_reason: z
+            .boolean()
+            .default(false)
+            .refine((value) => value === intent.publish_reason),
+          publish_actor: z
+            .boolean()
+            .default(false)
+            .refine((value) => value === intent.publish_actor),
         }),
         {
           method: 'POST',

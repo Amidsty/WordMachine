@@ -4,8 +4,8 @@ import { useServices } from '../../app/services'
 import { usePagedResource } from '../../shared/data/usePagedResource'
 import DataTable from '../../shared/ui/DataTable.vue'
 import PaginationBar from '../../shared/ui/PaginationBar.vue'
-import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
 import UserLink from '../../shared/ui/UserLink.vue'
+import './managementUi.css'
 
 const services = useServices()
 const actor = services.client.session.value?.user
@@ -22,7 +22,11 @@ watch(services.userChanges, () => {
 </script>
 
 <template>
-  <section v-if="actor && (actor.admin_level ?? 0) > 0" aria-labelledby="user-list-title">
+  <section
+    v-if="actor && (actor.admin_level ?? 0) > 0"
+    class="users-page"
+    aria-labelledby="user-list-title"
+  >
     <h2 id="user-list-title">用户管理 · Lv.{{ actor.admin_level }}</h2>
     <p class="hint">
       点击用户名打开操作小窗，统一选择资料、等级、密码、封禁/恢复及 Rating
@@ -40,41 +44,79 @@ watch(services.userChanges, () => {
         />包含已封禁用户</label
       >
     </form>
-    <NoticeBanner :message="list.error.value" />
     <button v-if="list.error.value" type="button" class="button" @click="list.load">
       重试加载
     </button>
-    <DataTable
-      caption="用户列表"
-      :loading="list.loading.value"
-      :empty="!list.result.value?.items.length"
-    >
-      <template #head
-        ><tr>
-          <th scope="col">用户</th>
-          <th scope="col">简介</th>
-          <th scope="col">Rating</th>
-          <th scope="col">角色 / 状态</th>
-        </tr></template
+    <div class="management-surface user-results">
+      <p class="hint">列表显示本次查询到的账号，不代表在线人数；操作能力在打开用户小窗时读取。</p>
+      <DataTable
+        caption="用户列表"
+        :loading="list.loading.value"
+        :error="list.error.value"
+        :empty="!list.result.value?.items.length"
       >
-      <tr v-for="user in list.result.value?.items" :key="user.id" :data-user-id="user.id">
-        <td>
-          <UserLink :id="user.id" :name="user.username" :rating="user.rating" /> #{{ user.id }}
-          <span v-if="user.id === actor.id">（当前账号）</span>
-        </td>
-        <td class="multiline">{{ user.introduction || '—' }}</td>
-        <td>{{ user.rating ?? '—' }}</td>
-        <td>
-          {{ user.admin_level ? `管理员 Lv.${user.admin_level}` : '普通用户（0 级）' }} /
-          {{ user.deleted === null ? '待审查' : user.deleted ? '已封禁' : '正常' }}
-        </td>
-      </tr>
-    </DataTable>
-    <PaginationBar
-      v-if="list.result.value"
-      :pagination="list.result.value.pagination"
-      label="用户分页"
-      @page="list.goToPage"
-    />
+        <template #head
+          ><tr>
+            <th scope="col">用户</th>
+            <th scope="col">简介</th>
+            <th scope="col">Rating</th>
+            <th scope="col">角色 / 状态</th>
+          </tr></template
+        >
+        <tr v-for="user in list.result.value?.items" :key="user.id" :data-user-id="user.id">
+          <td class="managed-user-name">
+            <UserLink :id="user.id" :name="user.username" :rating="user.rating" />
+            <small>#{{ user.id }} <span v-if="user.id === actor.id">· 当前账号</span></small>
+          </td>
+          <td class="multiline user-introduction">{{ user.introduction || '—' }}</td>
+          <td class="user-rating">{{ user.rating ?? '未记录' }}</td>
+          <td>
+            <span>{{
+              user.admin_level ? `管理员 Lv.${user.admin_level}` : '普通用户（0 级）'
+            }}</span>
+            <small class="user-status" :class="{ 'user-status--banned': user.deleted === true }">{{
+              user.deleted === null ? '状态待审查' : user.deleted ? '已封禁' : '正常'
+            }}</small>
+          </td>
+        </tr>
+      </DataTable>
+      <PaginationBar
+        v-if="list.result.value"
+        :pagination="list.result.value.pagination"
+        label="用户分页"
+        @page="list.goToPage"
+      />
+    </div>
   </section>
 </template>
+
+<style scoped>
+.users-page,
+.user-results {
+  min-width: 0;
+}
+.managed-user-name {
+  min-width: 10rem;
+  max-width: 20rem;
+}
+.managed-user-name small,
+.user-status {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--ui-text-muted);
+}
+.user-introduction {
+  min-width: 12rem;
+  max-width: 30rem;
+}
+.user-rating {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.user-status--banned {
+  color: var(--ui-negative);
+}
+.user-results :deep(th:nth-child(3)) {
+  text-align: right;
+}
+</style>

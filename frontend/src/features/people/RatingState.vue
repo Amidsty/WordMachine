@@ -1,44 +1,88 @@
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
+import { useAutoRefresh } from '../../app/useAutoRefresh'
 import { useServices } from '../../app/services'
 import { useFormTask } from '../../shared/forms/useFormTask'
 import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
+import SkeletonBlock from '../../shared/ui/SkeletonBlock.vue'
 import type { RatingState } from '../games/weighted'
 const props = defineProps<{ uid: number }>()
 const services = useServices(),
   task = useFormTask()
 const state = shallowRef<RatingState | null>(null)
 async function load() {
-  state.value = null
+  if (task.pending.value) return
   await task.run(async (signal) => {
-    const response = await services.history.account(props.uid, signal)
-    if (!signal.aborted) state.value = response.rating_state
+    try {
+      const response = await services.history.account(props.uid, signal)
+      if (!signal.aborted) state.value = response.rating_state
+    } catch (cause) {
+      if (!signal.aborted) state.value = null
+      throw cause
+    }
   })
 }
 onMounted(load)
+useAutoRefresh(load)
 </script>
 <template>
-  <section aria-label="Rating 与基础额度" class="section-panel">
-    <h2>Rating 与基础额度</h2>
+  <section aria-label="当前 Rating" class="profile-account">
+    <h2>当前 Rating</h2>
+    <p class="hint">当前账户的公开读取，不是某场比赛的赛后分数。</p>
     <NoticeBanner :message="task.error.value" />
-    <button type="button" class="button" :disabled="task.pending.value" @click="load">
-      刷新额度状态
-    </button>
+    <p v-if="task.pending.value && !state" role="status">正在读取公开评分…</p>
+    <SkeletonBlock v-if="task.pending.value && !state && !task.error.value" variant="account" />
     <template v-if="state">
-      <p>
-        公开 Rating R：{{ state.public_rating }} · 内部 Rating U：{{ state.internal_rating }} ·
-        剩余基础额度 H：{{ state.remaining_bonus }}
-      </p>
-      <p>
-        新手政策：{{ state.newcomer_enabled ? '启用' : '关闭' }} · 已完成新模型有效 Rated：{{
-          state.completed_games
-        }}
-        · 下次有效结算释放：{{ state.next_bonus }}
-      </p>
-      <p class="hint">
-        U = R + H。新手额度共1500，按600、350、250、150、100、50释放，不是每局补到1500；无答案或
-        Unrated 不发放。旧账号默认不补发，也不以这里的新模型场次数代表全部历史。
-      </p>
+      <dl class="profile-account-values">
+        <div class="public-rating">
+          <dt>Rating：</dt>
+          <dd>{{ state.public_rating }}</dd>
+        </div>
+      </dl>
     </template>
+    <button
+      v-if="task.error.value"
+      type="button"
+      class="button"
+      :disabled="task.pending.value"
+      :aria-busy="task.pending.value"
+      @click="load"
+    >
+      重试读取评分
+    </button>
   </section>
 </template>
+
+<style scoped>
+.profile-account {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  overflow-wrap: anywhere;
+}
+.profile-account h2 {
+  margin-top: 0;
+}
+.profile-account-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.profile-account-values dt {
+  color: var(--ui-text-muted);
+}
+.profile-account-values dd {
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.public-rating {
+  grid-column: 1 / -1;
+}
+.public-rating dd {
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 700;
+}
+</style>

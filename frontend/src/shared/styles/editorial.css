@@ -1,0 +1,171 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ui-text);
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ui-control-line);
+  border-radius: var(--ui-radius-sm);
+  font-weight: 800;
+  color: var(--ui-primary);
+}
+.site-header nav {
+  flex: 1 1 36rem;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.site-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5rem);
+  max-width: 64rem;
+  margin: clamp(2rem, 7vw, 6rem) auto;
+}
+.auth-layout.auth-layout--register {
+  align-items: start;
+  margin-block: clamp(1.5rem, 4vw, 3rem);
+}
+.auth-story {
+  padding: 1.5rem;
+  border-left: 3px solid var(--ui-primary);
+}
+.auth-kicker,
+.lobby-kicker {
+  margin: 0 0 0.75rem;
+  color: var(--ui-text-muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+}
+.auth-statement {
+  margin: 0 0 1.5rem;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  line-height: 1.4;
+  font-weight: 650;
+}
+.auth-layout > .form-panel {
+  width: 100%;
+  max-width: 27.5rem;
+  min-width: 0;
+  border-radius: var(--ui-radius-lg);
+}
+.auth-layout .button-primary {
+  width: 100%;
+}
+.workspace.lobby-workspace {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.lobby-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+.lobby-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding-block: 1rem 1.5rem;
+}
+.lobby-intro h1 {
+  margin-bottom: 0.75rem;
+}
+.lobby-intro .hint {
+  font-size: 1rem;
+}
+.lobby-workspace .section-nav {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ui-line);
+}
+.lobby-workspace .game-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.game-card .card-heading {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.game-card .card-heading h2 {
+  min-width: 0;
+  font-size: 1.125rem;
+}
+.game-card .card-heading a {
+  color: var(--ui-text);
+}
+.game-card .game-mode {
+  color: var(--ui-text-muted);
+  font-size: 0.875rem;
+}
+.game-card .game-status {
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-muted);
+  font-size: 0.875rem;
+}
+.game-card .actions {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ui-line);
+}
+@media (min-width: 768px) {
+  .lobby-workspace .game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .lobby-welcome {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    gap: 2rem;
+  }
+  .lobby-welcome .lobby-intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (min-width: 1200px) {
+  .lobby-workspace .game-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .auth-layout {
+    display: block;
+    margin-block: 1.5rem;
+  }
+  .auth-story {
+    display: none;
+  }
+  .site-header nav {
+    justify-content: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .button {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  :root :focus-visible {
+    outline-color: Highlight;
+  }
+  button[aria-pressed='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+}

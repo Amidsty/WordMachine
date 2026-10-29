@@ -7,6 +7,7 @@ import FormField from '../../shared/ui/FormField.vue'
 import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
 import SubmitButton from '../../shared/ui/SubmitButton.vue'
 import type { Dictionary } from './service'
+import './dictionaryOperations.css'
 
 const props = defineProps<{
   mode: 'create' | 'rename' | 'delete' | 'multiplier' | 'rated-bounds' | 'difficulty'
@@ -124,17 +125,59 @@ async function submit() {
 </script>
 
 <template>
-  <ModalDialog :title="titles[mode]" :busy="task.pending.value" @close="emit('close')">
+  <ModalDialog
+    class="dictionary-operation"
+    :title="titles[mode]"
+    :busy="task.pending.value"
+    @close="emit('close')"
+  >
+    <div v-if="dictionary" class="operation-target">
+      <p>
+        <strong
+          ><bdi>{{ dictionary.dictname ?? '（名称缺失）' }}</bdi></strong
+        >
+      </p>
+      <p class="hint">
+        词典 #{{ dictionary.id }} ·
+        {{ dictionary.ownerid === null ? '系统词典' : `个人词典 · 用户 #${dictionary.ownerid}` }}
+      </p>
+      <template v-if="['multiplier', 'difficulty', 'rated-bounds'].includes(mode)">
+        <p class="hint">本次读取的配置 · 版本 {{ dictionary.config_version ?? '未记录' }}</p>
+        <dl class="operation-facts">
+          <div>
+            <dt>难度 D</dt>
+            <dd>{{ dictionary.difficulty ?? '未记录' }}</dd>
+          </div>
+          <div>
+            <dt>Perf 倍率 M</dt>
+            <dd>{{ dictionary.multiplier ? `×${dictionary.multiplier}` : '未记录' }}</dd>
+          </div>
+          <div>
+            <dt>Rated 区间</dt>
+            <dd>
+              {{
+                dictionary.ownerid === null
+                  ? `[${dictionary.rated_min}, ${dictionary.rated_max}]（含端点）`
+                  : '仅 Unrated'
+              }}
+            </dd>
+          </div>
+        </dl>
+      </template>
+    </div>
     <NoticeBanner :message="task.error.value" />
     <form @submit.prevent="submit">
       <fieldset :disabled="task.pending.value">
         <legend class="sr-only">{{ titles[mode] }}</legend>
-        <template v-if="mode === 'delete'">
-          <p>确认删除词典“{{ dictionary?.dictname ?? '名称缺失' }}”及其全部单词？</p>
-          <p class="hint">
-            此操作为软删除。新建对局已有题目快照；旧对局仍引用原词典，请先确认影响。
+        <div v-if="mode === 'delete'" class="operation-impact">
+          <p><strong>确认删除此词典及其全部单词？</strong></p>
+          <p>范围是整个词典，不是当前页或搜索命中项。采用软删除，但本页面没有撤销或恢复入口。</p>
+          <p>已有题目快照和历史不会被重写；legacy_live 旧实时对局仍可能受词典删除影响。</p>
+          <p>
+            删除系统词典可能阻止已有等待 Rated
+            局后续报名或开局，不能将“快照保留”理解为所有既有比赛不受影响。
           </p>
-        </template>
+        </div>
         <FormField
           v-else-if="mode === 'create' || mode === 'rename'"
           id="dict-name"
@@ -187,20 +230,22 @@ async function submit() {
           </p>
         </template>
         <template v-if="mode === 'rated-bounds'">
-          <FormField
-            id="rated-min"
-            v-model="ratedMin"
-            label="Rated 下界 L"
-            required
-            :maxlength="11"
-          />
-          <FormField
-            id="rated-max"
-            v-model="ratedMax"
-            label="Rated 上界 R"
-            required
-            :maxlength="11"
-          />
+          <div class="operation-fields">
+            <FormField
+              id="rated-min"
+              v-model="ratedMin"
+              label="Rated 下界 L"
+              required
+              :maxlength="11"
+            />
+            <FormField
+              id="rated-max"
+              v-model="ratedMax"
+              label="Rated 上界 R"
+              required
+              :maxlength="11"
+            />
+          </div>
           <FormField
             id="rated-reason"
             v-model="reason"
@@ -209,15 +254,25 @@ async function submit() {
             :maxlength="500"
           />
           <p class="hint">
-            仅系统词典、Lv.3
-            及以上可设置。闭区间包含端点，所有参赛者均须符合；等待局的加入和开局使用最新区间，已开局比赛不追溯。失败不自动重发。
+            仅系统词典、Lv.3 及以上可设置。闭区间包含端点；创建、报名、开局按最新区间及全员当前
+            Rating
+            检查，管理员无准入豁免。新范围可能阻止等待局后续报名或开局；不追溯运行局/历史，也不自动转为
+            Unrated。与创建时冻结的 D/M 不同，失败不自动重发。
           </p>
         </template>
-        <div class="actions">
+        <p v-if="['multiplier', 'difficulty', 'rated-bounds'].includes(mode)" class="hint">
+          按本次读取的配置版本提交；配置冲突后需关闭并重新读取、核对，不自动套用新版本重发。关闭不代表撤销已发送的修改。
+        </p>
+        <p v-else class="hint">
+          此操作没有持久成功回执。网络异常或响应损坏时结果可能未知，请关闭后重新读取核对；再次提交不保证幂等，关闭也不代表撤销服务器操作。
+        </p>
+        <div class="actions operation-actions">
           <button type="button" class="button" @click="emit('close')">取消</button>
-          <SubmitButton :pending="task.pending.value">{{
-            mode === 'delete' ? '确认删除' : '保存词典'
-          }}</SubmitButton>
+          <SubmitButton
+            :pending="task.pending.value"
+            :class="{ 'operation-delete': mode === 'delete' }"
+            >{{ mode === 'delete' ? '确认删除' : '保存词典' }}</SubmitButton
+          >
         </div>
       </fieldset>
     </form>

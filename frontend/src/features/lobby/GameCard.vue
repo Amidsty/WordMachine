@@ -11,11 +11,13 @@ const actions: LobbyAction[] = ['join', 'leave', 'start', 'cancel']
   <article class="game-card" :aria-labelledby="`game-title-${game.id}`">
     <header class="card-heading">
       <h2 :id="`game-title-${game.id}`">
-        <bdi>{{ game.name ?? '对局' }}</bdi> #{{ game.id }}
+        <RouterLink :to="`/game/${game.id}/detail/`"
+          ><bdi>{{ game.name ?? '对局' }}</bdi> #{{ game.id }}</RouterLink
+        >
       </h2>
-      <span>{{ gameStatusLabels[game.status] }}</span>
+      <span class="game-status">{{ gameStatusLabels[game.status] }}</span>
     </header>
-    <p>{{ game.rated ? 'Rated · 更新 Rating' : 'Unrated · 不更新 Rating' }}</p>
+    <p class="game-mode">{{ game.rated ? 'Rated · 更新 Rating' : 'Unrated · 不更新 Rating' }}</p>
     <p>词典：{{ game.dictname ?? '（词典缺失）' }}</p>
     <p>
       本局 Perf 倍率：{{

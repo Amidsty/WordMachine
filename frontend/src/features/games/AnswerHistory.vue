@@ -45,7 +45,6 @@ const rows = computed(() => {
           <th scope="col">已记录结果</th>
           <th scope="col">Perf / 增量</th>
           <th scope="col">个人 / 全局连击（作答后）</th>
-          <th scope="col">规则版本</th>
         </tr>
       </template>
       <tr v-for="{ answer, index, word } in rows" :key="index">
@@ -63,7 +62,6 @@ const rows = computed(() => {
         <td>{{ answer.result === true ? '正确' : answer.result === false ? '错误' : '未记录' }}</td>
         <td>{{ storedPerf(answer.perf) }} / {{ storedPerf(answer.perf_delta, true) }}</td>
         <td>{{ storedNumber(answer.usercombo) }} / {{ storedNumber(answer.globalcombo) }}</td>
-        <td>{{ storedText(answer.rating_version) }}</td>
       </tr>
     </DataTable>
     <PaginationBar
@@ -72,8 +70,6 @@ const rows = computed(() => {
       label="答题记录分页"
       @page="page = $event"
     />
-    <p class="hint">
-      连击列为作答后的值，错误后清零不代表没有惩罚；实际使用的答题前连击及倍率见评分分项。仅对已读取记录分页，不重新判题或补齐历史缺失字段。
-    </p>
+    <p class="hint">显示已保存的作答结果与表现评分；连击为作答后的值。</p>
   </section>
 </template>

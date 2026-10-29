@@ -1,0 +1,93 @@
+.management-surface {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+}
+.managed-identity {
+  padding: 1rem;
+  background: var(--ui-surface-muted);
+  border-left: 3px solid var(--ui-primary);
+  overflow-wrap: anywhere;
+}
+.managed-identity p {
+  margin: 0.3rem 0;
+}
+.management-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 1rem;
+  margin-block: 0;
+  font-variant-numeric: tabular-nums;
+}
+.management-facts dt {
+  color: var(--ui-text-muted);
+  font-size: 0.9rem;
+}
+.management-facts dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.management-form,
+.management-form p {
+  overflow-wrap: anywhere;
+}
+.management-form select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.65rem 0.8rem;
+  background: var(--ui-surface);
+  color: inherit;
+  border: 1px solid var(--ui-control-line);
+  border-radius: var(--ui-radius-sm);
+  margin-block: 0.5rem 1rem;
+}
+.management-impact {
+  border-left: 3px solid var(--ui-warning);
+  padding: 0.75rem 1rem;
+  margin-block: 1rem;
+  background: var(--ui-warning-soft);
+  overflow-wrap: anywhere;
+}
+.management-impact p {
+  margin-block: 0.25rem;
+}
+.management-form .actions {
+  margin-top: 1.5rem;
+}
+.management-form .danger-confirm:not(:disabled) {
+  color: #fff;
+  background: var(--ui-negative);
+  border-color: var(--ui-negative);
+}
+.management-form .danger-confirm:not(:disabled):hover {
+  color: var(--ui-negative);
+  background: var(--ui-negative-soft);
+}
+.management-section {
+  border-top: 1px solid var(--ui-line);
+  padding-block: 0.75rem;
+  margin-top: 1rem;
+}
+.management-section h3 {
+  margin: 0 0 0.75rem;
+}
+@media (min-width: 600px) {
+  .management-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (forced-colors: active) {
+  .managed-identity,
+  .management-impact {
+    border: 1px solid CanvasText;
+  }
+  .management-form .danger-confirm:not(:disabled) {
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+  }
+}

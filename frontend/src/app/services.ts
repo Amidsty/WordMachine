@@ -28,6 +28,7 @@ export function createServices(
     endRequests: createEndRequestService(client),
     sessionError: ref(''),
     userMenuTarget: ref<number | null>(null),
+    navigationMenu: ref<'primary' | 'account' | null>(null),
     userChanges: ref(0),
     sockets: createSocketService(client, socketFactory),
   }

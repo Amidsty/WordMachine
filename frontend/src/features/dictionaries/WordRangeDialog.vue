@@ -6,6 +6,7 @@ import ModalDialog from '../../shared/ui/ModalDialog.vue'
 import FormField from '../../shared/ui/FormField.vue'
 import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
 import type { WordRangePreview } from './service'
+import './dictionaryOperations.css'
 
 const props = defineProps<{ dictId: number }>()
 const emit = defineEmits<{ close: []; saved: [count: number] }>()
@@ -74,7 +75,13 @@ function back() {
 </script>
 
 <template>
-  <ModalDialog title="批量删除单词" :busy="task.pending.value" @close="emit('close')">
+  <ModalDialog
+    class="dictionary-operation"
+    title="批量删除单词"
+    :busy="task.pending.value"
+    @close="emit('close')"
+  >
+    <p v-if="!preview" class="operation-target">词典 #{{ dictId }} · 选择全词表区间</p>
     <p class="hint">
       按整个词典中有效单词的 ID 升序计算序号，从 1
       开始，两端包含。不受搜索和分页影响，也不是填写数据库 ID。
@@ -83,36 +90,42 @@ function back() {
     <form v-if="!preview" @submit.prevent="inspect">
       <fieldset :disabled="task.pending.value">
         <legend class="sr-only">选择删除区间</legend>
-        <FormField id="range-left" v-model="left" label="起始序号 l" required :maxlength="10" />
-        <FormField id="range-right" v-model="right" label="终止序号 r" required :maxlength="10" />
+        <div class="operation-fields">
+          <FormField id="range-left" v-model="left" label="起始序号 l" required :maxlength="10" />
+          <FormField id="range-right" v-model="right" label="终止序号 r" required :maxlength="10" />
+        </div>
         <p>这一步只生成预览，不会删除单词。</p>
         <button type="submit" class="button">预览删除范围</button>
       </fieldset>
     </form>
     <template v-else>
       <h3>请确认删除</h3>
-      <p>
-        词典：{{ preview.dictname ?? '（未命名）' }}（#{{ preview.dict_id }}），当前有效单词共
-        {{ preview.total }} 个。
+      <p class="operation-target">
+        词典：<bdi>{{ preview.dictname ?? '（未命名）' }}</bdi
+        >（#{{ preview.dict_id }}），当前有效单词共 {{ preview.total }} 个（预览时读取）。
       </p>
-      <p role="alert">
+      <p role="alert" class="operation-impact">
         <strong
           >将删除第 {{ preview.l }}～{{ preview.r }} 项，共
           {{ preview.count }} 个单词。此操作没有页面撤销入口，请核对后确认。</strong
         >
       </p>
-      <p class="hint">确认有效期 {{ preview.expires_in }} 秒。</p>
+      <p class="hint">
+        确认有效期
+        {{ preview.expires_in }} 秒，由服务端签发；此处不是倒计时，确认时仍由服务端校验是否过期。
+      </p>
       <p class="hint">
         确认时词表或词典信息与预览不一致，必须重新预览。以下最多显示区间前五项及后五项。
       </p>
-      <ol>
+      <ol class="range-samples" aria-label="区间首尾样本">
         <li
           v-for="word in preview.words"
           :key="word.position"
           :value="word.position"
           class="multiline"
         >
-          {{ word.english ?? '（英文缺失）' }} — {{ word.chinese ?? '（中文缺失）' }}
+          <bdi>{{ word.english ?? '（英文缺失）' }}</bdi> —
+          <bdi>{{ word.chinese ?? '（中文缺失）' }}</bdi>
         </li>
       </ol>
       <p v-if="preview.count > preview.words.length">
@@ -120,12 +133,25 @@ function back() {
         {{ preview.count - preview.words.length }} 项；确认将删除整个区间，并非仅删除预览样本。
       </p>
       <p>
-        采用软删除，已有新局题目快照和历史记录不变；旧式实时读词典的对局可能受影响，不会为旧局补造题目。
+        采用软删除，已有题目快照和历史记录不变；legacy_live
+        旧式实时读词典的对局可能受影响，不会为旧局补造题目。
       </p>
+      <p class="hint">
+        签名确认令牌绑定本次审查，不是 UUID
+        成功回执。内容变化、过期或已删除均可能使原确认被拒绝；拒绝不能证明上次未删除，不会自动生成新确认。
+      </p>
+    </template>
+    <p class="hint">请求超过 10 秒未收到响应会停止等待，不代表回滚。不会自动重发。</p>
+    <p class="hint">确认丢失时保留原预览，先核对结果再手动处理。重复提交不会删除后移的下一段。</p>
+    <p v-if="attempted" class="hint">
+      关闭或刷新会丢失本页确认信息；再次预览不代表上次删除被撤销。
+    </p>
+    <div v-if="preview" class="actions operation-actions">
       <button
         type="button"
-        class="button button-danger"
+        class="button operation-delete"
         :disabled="task.pending.value"
+        :aria-busy="task.pending.value"
         @click="remove"
       >
         {{ attempted ? '重试原确认' : '确认删除区间' }}
@@ -133,11 +159,6 @@ function back() {
       <button type="button" class="button" :disabled="task.pending.value" @click="back">
         返回输入（不撤销已提交结果）
       </button>
-    </template>
-    <p class="hint">请求超过 10 秒未收到响应会停止等待，不代表回滚。不会自动重发。</p>
-    <p class="hint">确认丢失时保留原预览，先核对结果再手动处理。重复提交不会删除后移的下一段。</p>
-    <p v-if="attempted" class="hint">
-      关闭或刷新会丢失本页确认信息；再次预览不代表上次删除被撤销。
-    </p>
+    </div>
   </ModalDialog>
 </template>
