@@ -36,32 +36,40 @@ async function submit() {
 </script>
 
 <template>
-  <FormPanel title="登录" description="使用用户名和密码登录 WordMachine。">
-    <NoticeBanner :message="notice" kind="success" />
-    <NoticeBanner :message="task.error.value" />
-    <form :aria-busy="task.pending.value" @submit.prevent="submit">
-      <fieldset :disabled="task.pending.value">
-        <legend class="sr-only">登录信息</legend>
-        <FormField
-          id="username"
-          v-model="username"
-          label="用户名"
-          required
-          autocomplete="username"
-          :maxlength="255"
-        />
-        <FormField
-          id="password"
-          v-model="password"
-          label="密码"
-          type="password"
-          required
-          autocomplete="current-password"
-          :maxlength="4096"
-        />
-        <SubmitButton :pending="task.pending.value">登录</SubmitButton>
-      </fieldset>
-    </form>
-    <p class="form-footer">还没有账号？<RouterLink to="/register/">注册账号</RouterLink></p>
-  </FormPanel>
+  <div class="auth-layout">
+    <aside class="auth-story" aria-label="关于 WordMachine">
+      <p class="auth-kicker">WORDMACHINE · 单词竞技台</p>
+      <p class="auth-statement">从一个单词，<br />开始一场对战。</p>
+      <p>专注每一次作答，清楚了解自己的表现。</p>
+      <p class="hint">Rated 更新 Rating；Unrated 保留练习表现，不更新 Rating。</p>
+    </aside>
+    <FormPanel title="登录" description="从一个单词，开始一场对战。">
+      <NoticeBanner :message="notice" kind="success" />
+      <NoticeBanner :message="task.error.value" />
+      <form :aria-busy="task.pending.value" @submit.prevent="submit">
+        <fieldset :disabled="task.pending.value">
+          <legend class="sr-only">登录信息</legend>
+          <FormField
+            id="username"
+            v-model="username"
+            label="用户名"
+            required
+            autocomplete="username"
+            :maxlength="255"
+          />
+          <FormField
+            id="password"
+            v-model="password"
+            label="密码"
+            type="password"
+            required
+            autocomplete="current-password"
+            :maxlength="4096"
+          />
+          <SubmitButton :pending="task.pending.value">登录</SubmitButton>
+        </fieldset>
+      </form>
+      <p class="form-footer">还没有账号？<RouterLink to="/register/">注册账号</RouterLink></p>
+    </FormPanel>
+  </div>
 </template>

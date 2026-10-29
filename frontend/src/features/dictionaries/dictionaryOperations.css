@@ -1,0 +1,79 @@
+.dictionary-operation .operation-target {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius-sm);
+}
+.dictionary-operation p,
+.dictionary-operation dd,
+.dictionary-operation li {
+  overflow-wrap: anywhere;
+}
+.dictionary-operation .operation-target > :first-child {
+  margin-top: 0;
+}
+.dictionary-operation .operation-target > :last-child {
+  margin-bottom: 0;
+}
+.dictionary-operation .operation-facts,
+.dictionary-operation .operation-fields {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.dictionary-operation .operation-facts dt {
+  color: var(--ui-text-muted);
+}
+.dictionary-operation .operation-facts dd {
+  margin: 0.25rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.dictionary-operation .operation-impact {
+  border-inline-start: 3px solid var(--ui-negative);
+  padding: 0.25rem 0 0.25rem 1rem;
+  margin-block: 1rem;
+}
+.dictionary-operation .operation-actions {
+  border-top: 1px solid var(--ui-line);
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+.dictionary-operation .button.operation-delete,
+.dictionary-operation .button.operation-delete:not(:disabled):hover {
+  color: #fff;
+  background: var(--ui-negative);
+  border-color: var(--ui-negative);
+}
+.dictionary-operation .button.operation-delete:not(:disabled):hover {
+  text-decoration: underline;
+}
+.dictionary-operation .range-samples {
+  padding: 0;
+  list-style-position: inside;
+}
+.dictionary-operation .range-samples li {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--ui-line);
+}
+.dictionary-operation .range-samples li::marker {
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-muted);
+}
+@media (min-width: 600px) {
+  .dictionary-operation .operation-facts,
+  .dictionary-operation .operation-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (forced-colors: active) {
+  .dictionary-operation .operation-impact {
+    border-color: CanvasText;
+  }
+  .dictionary-operation .button.operation-delete,
+  .dictionary-operation .button.operation-delete:not(:disabled):hover {
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+  }
+}

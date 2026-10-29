@@ -58,7 +58,6 @@ async function submit() {
         />
         <button type="submit" class="button">搜索词典</button>
       </form>
-      <NoticeBanner :message="dictionaries.error.value" />
       <button
         v-if="dictionaries.error.value"
         type="button"
@@ -70,6 +69,7 @@ async function submit() {
       <DataTable
         caption="可选词典"
         :loading="dictionaries.loading.value"
+        :error="dictionaries.error.value"
         :empty="!dictionaries.result.value?.items.length"
       >
         <template #head
@@ -108,14 +108,27 @@ async function submit() {
         label="可选词典分页"
         @page="dictionaries.goToPage"
       />
-      <p>
-        当前选择：{{
-          selected
-            ? `${selected.dictname ?? '名称缺失'} #${selected.id} · Perf ×${selected.multiplier ?? '未记录'}`
-            : '尚未选择'
-        }}
-        （创建成功后以服务器冻结的倍率为准，后续词典修改不影响本局。）
-      </p>
+      <section class="creation-selection" aria-label="已选词典">
+        <p>
+          当前选择：{{
+            selected
+              ? `${selected.dictname ?? '名称缺失'} #${selected.id} · Perf ×${selected.multiplier ?? '未记录'}`
+              : '尚未选择'
+          }}
+        </p>
+        <p v-if="selected" class="hint">
+          难度 D：{{ selected.difficulty ?? '未记录' }} ·
+          {{
+            selected.ownerid === null
+              ? `系统词典 · Rated [${selected.rated_min}, ${selected.rated_max}]`
+              : '个人词典 · 仅 Unrated'
+          }}
+        </p>
+        <p class="hint">
+          选择独立于当前搜索和分页；D/M 以创建成功后服务端冻结值为准。Rated
+          准入区间不冻结，后续报名和开局仍检查最新条件。
+        </p>
+      </section>
       <form @submit.prevent="submit">
         <label for="game-rated">比赛模式</label>
         <select id="game-rated" v-model="rated">
@@ -131,10 +144,7 @@ async function submit() {
           Rated 仅限系统词典；所有参赛者须符合闭区间。报名和开局时会用最新
           Rating、最新区间重新检查，管理员没有豁免。
         </p>
-        <p>
-          创建后固定，不能在报名、开局或结算时更改。Unrated 保存作答和 Perf，但不写 Rating
-          流水，也不消耗前五场评分基线次数。
-        </p>
+        <p>创建后不能更改模式。Unrated 保存作答和 Perf，但不更新 Rating。</p>
         <p v-if="task.error.value" class="hint">
           超时不代表创建失败。重试相同词典和模式保留原请求；更换词典或模式会创建新意图，请先核对上次结果，避免另建比赛。
         </p>
@@ -146,3 +156,20 @@ async function submit() {
     </fieldset>
   </ModalDialog>
 </template>
+
+<style scoped>
+.creation-selection {
+  padding: 1rem;
+  margin-block: 1rem;
+  background: var(--ui-primary-soft);
+  border-left: 3px solid var(--ui-primary);
+  overflow-wrap: anywhere;
+}
+.creation-selection p {
+  margin-block: 0.4rem;
+}
+:deep(.checkbox-label) {
+  min-width: 12rem;
+  align-items: flex-start;
+}
+</style>

@@ -5,7 +5,10 @@ import { listQueryString, paginationSchema, type ListQuery } from '../../shared/
 
 const leaderSchema = userSchema
   .pick({ id: true, username: true, introduction: true, rating: true })
-  .extend({ rank: z.number().int().min(1).max(100) })
+  .extend({
+    rank: z.number().int().min(1).max(100),
+    participation_count: z.number().int().min(0).max(2147483647),
+  })
 export function createPeopleService(client: ApiClient) {
   return {
     async profile(id: number, signal?: AbortSignal) {

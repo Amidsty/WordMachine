@@ -1,0 +1,29 @@
+:root {
+  --ui-bg: #f5f4f0;
+  --ui-surface: #fff;
+  --ui-surface-muted: #f8fafc;
+  --ui-text: #182338;
+  --ui-text-muted: #526178;
+  --ui-line: #dce2eb;
+  --ui-control-line: #77869c;
+  --ui-primary: #2854d7;
+  --ui-primary-hover: #2043af;
+  --ui-primary-soft: #edf2ff;
+  --ui-focus: #2854d7;
+  --ui-positive: #147d64;
+  --ui-positive-soft: #eaf7f0;
+  --ui-warning: #875500;
+  --ui-warning-soft: #fff5db;
+  --ui-negative: #b42318;
+  --ui-negative-soft: #fef0ee;
+  /* Username palette remains unchanged pending separate approval. */
+  --ui-name-unknown: #516078;
+  --ui-font:
+    Inter, 'SF Pro Text', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --ui-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --ui-radius-sm: 8px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 20px;
+  --ui-shadow-card: 0 4px 18px rgb(24 35 56 / 4%);
+  --ui-shadow-popover: 0 16px 48px rgb(24 35 56 / 14%);
+}

@@ -62,6 +62,12 @@ const viewers = computed(() => {
 .game-sidebar {
   min-width: 0;
 }
+.game-sidebar .section-panel {
+  background: var(--ui-surface);
+}
+.game-sidebar .section-panel:first-child {
+  margin-top: 0;
+}
 .game-sidebar h2 {
   margin-top: 0;
 }

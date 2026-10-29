@@ -505,6 +505,8 @@ class ManualRating(Base):
     rating_after = Column(Integer, nullable=False)
     reason = Column(String(500), nullable=False)
     recorded_at = Column(DATETIME(fsp=6), nullable=False)
+    publish_reason = Column(Integer, nullable=False, server_default=text('0'))
+    publish_actor = Column(Integer, nullable=False, server_default=text('0'))
     __table_args__ = (
         UniqueConstraint('actor_id', 'request_id', name='uq_manual_request'),
         UniqueConstraint('user_id', 'id', name='uq_manual_user_id'),
@@ -520,6 +522,9 @@ class ManualRating(Base):
             name='ck_manual_arithmetic',
         ),
         CheckConstraint('CHAR_LENGTH(TRIM(reason)) BETWEEN 1 AND 500', name='ck_manual_reason'),
+        CheckConstraint(
+            'publish_reason IN (0, 1) AND publish_actor IN (0, 1)', name='ck_manual_visibility'
+        ),
         {'mysql_engine': 'InnoDB'},
     )
 

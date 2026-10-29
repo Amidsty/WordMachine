@@ -8,6 +8,7 @@ import FormField from '../../shared/ui/FormField.vue'
 import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
 import UserName from '../../shared/ui/UserName.vue'
 import SubmitButton from '../../shared/ui/SubmitButton.vue'
+import './managementUi.css'
 import type { ManagedUser, UserAction } from './service'
 
 const props = defineProps<{ user: ManagedUser; action: UserAction }>()
@@ -58,6 +59,7 @@ async function submit() {
     } else {
       await services.users.act(props.user.id, props.action, actorId, password.value, signal)
     }
+    signal.throwIfAborted()
     password.value = confirmation.value = ''
     emit('saved')
   })
@@ -66,10 +68,34 @@ async function submit() {
 
 <template>
   <ModalDialog :title="titles[action]" :busy="task.pending.value" @close="emit('close')">
-    <p>目标用户：<UserName :name="user.username" :rating="user.rating" />（#{{ user.id }}）</p>
-    <p class="hint">此操作会撤销该用户的所有会话。封禁保留历史数据；恢复不会复活旧会话。</p>
+    <div class="managed-identity">
+      <p>目标用户：<UserName :name="user.username" :rating="user.rating" />（#{{ user.id }}）</p>
+      <p class="hint">
+        本次打开时读取 ·
+        {{ user.admin_level ? `管理员 Lv.${user.admin_level}` : '普通用户（0 级）' }} ·
+        {{ user.deleted === null ? '状态待审查' : user.deleted ? '已封禁' : '正常' }}
+      </p>
+      <p v-if="action === 'level'" class="hint">
+        审查版本：{{ user.admin_version ?? '未记录（不能提交等级修改）' }}
+      </p>
+    </div>
+    <div class="management-impact">
+      <p>此操作会撤销该用户的所有会话。</p>
+      <p v-if="action === 'delete'">
+        封禁保留历史数据。该账号不能继续登录或操作；这不是删除历史比赛或词典记录。
+      </p>
+      <p v-else-if="action === 'restore'">
+        恢复不会复活旧会话；恢复的是账号活动状态，目标用户需重新登录。
+      </p>
+      <p v-else-if="action === 'reset-password'">
+        仅设置目标用户的新密码，不恢复封禁状态，不修改历史成绩。
+      </p>
+      <p class="hint">
+        确认丢失或网络失败不能证明未生效；取消只停止本地等待，不撤销服务端修改。不会自动重发。
+      </p>
+    </div>
     <NoticeBanner :message="task.error.value" />
-    <form @submit.prevent="submit">
+    <form class="management-form" @submit.prevent="submit">
       <fieldset :disabled="task.pending.value">
         <legend class="sr-only">{{ titles[action] }}</legend>
         <template v-if="action === 'level'">
@@ -139,7 +165,11 @@ async function submit() {
         </template>
         <div class="actions">
           <button type="button" class="button" @click="emit('close')">取消</button>
-          <SubmitButton :pending="task.pending.value">确认{{ titles[action] }}</SubmitButton>
+          <SubmitButton
+            :pending="task.pending.value"
+            :class="{ 'danger-confirm': action !== 'update' }"
+            >确认{{ titles[action] }}</SubmitButton
+          >
         </div>
       </fieldset>
     </form>

@@ -31,8 +31,9 @@ export function createAuthService(client: ApiClient) {
         signal,
       })
     },
-    async logout() {
-      await client.request('/api/logout', successSchema, { method: 'POST', body: {} })
+    async logout(signal?: AbortSignal) {
+      await client.request('/api/logout', successSchema, { method: 'POST', body: {}, signal })
+      signal?.throwIfAborted()
       client.acceptSession(null, 'logout')
     },
     async updateProfile(uid: number, data: ProfileUpdate, signal?: AbortSignal) {
@@ -42,6 +43,9 @@ export function createAuthService(client: ApiClient) {
         signal,
         expectedUserId: uid,
       })
+      // A disposed form cannot apply its late result to a newer route/identity.
+      // This only cancels local reception, not a server-side profile change.
+      signal?.throwIfAborted()
       if (result.reauthenticate) client.acceptSession(null, 'password_changed')
       else if (client.session.value?.user?.id === result.user.id) {
         client.acceptSession({ ...client.session.value, authenticated: true, user: result.user })

@@ -52,10 +52,14 @@ def parameters(data):
         'reason',
         'current_password',
     }
-    if set(data) != fields:
+    visibility = {'publish_reason', 'publish_actor'}
+    if not fields <= set(data) or set(data) - fields - visibility:
         raise ApiError(
             'Rating adjustment requires request_id, expected_rating, expected_event_id, new_rating, reason and current_password'
         )
+    for field in visibility:
+        if type(data.get(field, False)) is not bool:
+            raise ApiError(f'{field} must be a boolean')
     request_id = validate_options(data['request_id'])[0]
     if request_id is None:
         raise ApiError('request_id is required')
@@ -75,12 +79,20 @@ def parameters(data):
         'expected_event_id': event_id,
         'new_rating': _integer(data['new_rating'], 'new_rating'),
         'reason': string(data['reason'], 'Reason', minimum=1, maximum=500),
+        'publish_reason': data.get('publish_reason', False),
+        'publish_actor': data.get('publish_actor', False),
     }, password(data['current_password'], new=False)
 
 
 def _reserve(cursor, actor_id, target_id, intent):
+    # All-private is exactly the pre-0019 intent: existing UUID receipts remain
+    # replayable without rewriting hashes. Any opt-in is part of the fingerprint.
+    fingerprint = dict(intent)
+    if not intent['publish_reason'] and not intent['publish_actor']:
+        fingerprint.pop('publish_reason')
+        fingerprint.pop('publish_actor')
     encoded = json.dumps(
-        [target_id, intent], sort_keys=True, separators=(',', ':'), ensure_ascii=True
+        [target_id, fingerprint], sort_keys=True, separators=(',', ':'), ensure_ascii=True
     )
     digest = hashlib.sha256(encoded.encode('ascii')).hexdigest()
     try:
@@ -111,6 +123,8 @@ def _reserve(cursor, actor_id, target_id, intent):
                 or result.get('request_id') != intent['request_id']
                 or result.get('user_id') != target_id
                 or result.get('rating_after') != intent['new_rating']
+                or result.get('publish_reason', False) is not intent['publish_reason']
+                or result.get('publish_actor', False) is not intent['publish_actor']
             ):
                 raise ValueError
         except (TypeError, ValueError):
@@ -160,6 +174,8 @@ def review(actor_id, target_id):
                     'game_id': games.get(event['game_rating_id']),
                     'actor_id': manual.get('actor_id'),
                     'reason': manual.get('reason'),
+                    'publish_reason': bool(manual.get('publish_reason', 0)),
+                    'publish_actor': bool(manual.get('publish_actor', 0)),
                     'recorded_at': event['recorded_at'].isoformat() + 'Z',
                 }
             )
@@ -204,7 +220,7 @@ def adjust(actor_id, target_id, data):
         now = datetime.utcnow()
         delta = intent['new_rating'] - target['rating']
         cursor.execute(
-            'INSERT INTO manual_rating (user_id, actor_id, actor_level, request_id, last_game_rating_id, rating_before, delta, rating_after, reason, recorded_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            'INSERT INTO manual_rating (user_id, actor_id, actor_level, request_id, last_game_rating_id, rating_before, delta, rating_after, reason, recorded_at, publish_reason, publish_actor) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             (
                 target_id,
                 actor_id,
@@ -216,6 +232,8 @@ def adjust(actor_id, target_id, data):
                 intent['new_rating'],
                 intent['reason'],
                 now,
+                int(intent['publish_reason']),
+                int(intent['publish_actor']),
             ),
         )
         source_id = cursor.lastrowid
@@ -230,6 +248,8 @@ def adjust(actor_id, target_id, data):
             'rating_after': intent['new_rating'],
             'rating_event_id': str(event_id),
             'message': 'Rating adjusted',
+            'publish_reason': intent['publish_reason'],
+            'publish_actor': intent['publish_actor'],
         }
         audit(
             cursor,
@@ -241,6 +261,8 @@ def adjust(actor_id, target_id, data):
                 'rating': intent['new_rating'],
                 'rating_event_id': str(event_id),
                 'request_id': intent['request_id'],
+                'publish_reason': intent['publish_reason'],
+                'publish_actor': intent['publish_actor'],
             },
             reason=intent['reason'],
         )

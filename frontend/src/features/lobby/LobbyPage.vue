@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref, shallowRef } from 'vue'
+import { onMounted, ref, shallowRef, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useServices } from '../../app/services'
 import { usePagedResource } from '../../shared/data/usePagedResource'
 import { usePolling } from '../../shared/data/usePolling'
 import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
+import SkeletonBlock from '../../shared/ui/SkeletonBlock.vue'
 import PaginationBar from '../../shared/ui/PaginationBar.vue'
 import GameCard from './GameCard.vue'
+import LobbyAccountCard from './LobbyAccountCard.vue'
 import GameActionDialog from './GameActionDialog.vue'
 import CreateGameDialog from './CreateGameDialog.vue'
 import {
@@ -29,12 +31,24 @@ const navigating = ref(false)
 const dialog = shallowRef<
   { kind: 'create' } | { kind: 'action'; game: LobbyGame; action: LobbyAction } | null
 >(null)
+let menuRevision = 0
+let needsMenuRead = false
+watch(
+  services.navigationMenu,
+  (next, previous) => {
+    menuRevision++
+    if (previous && !next) needsMenuRead = true
+  },
+  { flush: 'sync' },
+)
 const list = usePagedResource(async (query, signal) => {
+  const revision = menuRevision
+  if (!services.navigationMenu.value) needsMenuRead = false
   try {
     const data = await services.lobby.list(query, status.value, signal)
     if (!signal.aborted) {
       activeGameId.value = data.activeGameId
-      enterActiveGame(data.activeGameId)
+      if (revision === menuRevision) enterActiveGame(data.activeGameId)
     }
     return data
   } catch (error) {
@@ -48,8 +62,14 @@ const polling = usePolling(
     autoRefresh.value &&
     !dialog.value &&
     services.userMenuTarget.value === null &&
+    services.navigationMenu.value === null &&
     !navigating.value,
 )
+// If a pre-menu GET was still running at resume, usePolling cannot start a
+// second refresh yet. Wait for it, then require a new read, never its membership.
+watch([list.loading, polling.paused], () => {
+  if (needsMenuRead && !list.loading.value && !polling.paused.value) void list.refresh()
+})
 // Only a newly accepted read can initiate navigation; resuming must not use cached membership.
 function enterActiveGame(id: number | null) {
   if (
@@ -85,15 +105,29 @@ function created(id: number) {
 </script>
 
 <template>
-  <section class="workspace" aria-labelledby="page-title">
-    <h1 id="page-title" tabindex="-1">对局大厅</h1>
-    <p class="hint">词典由创建者或管理员维护。对局题目快照及历史数据迁移仍在重构中。</p>
+  <section class="workspace lobby-workspace" aria-labelledby="page-title">
+    <div class="lobby-welcome">
+      <header class="lobby-intro">
+        <div>
+          <p class="lobby-kicker">WORDMACHINE · 单词竞技台</p>
+          <h1 id="page-title" tabindex="-1">对局大厅</h1>
+          <p class="hint">让每一次作答，都有清晰的回响。选择一个词典，开始一场对战。</p>
+        </div>
+        <button type="button" class="button button-primary" @click="dialog = { kind: 'create' }">
+          创建新对局
+        </button>
+      </header>
+      <LobbyAccountCard />
+    </div>
     <div class="toolbar">
-      <button type="button" class="button button-primary" @click="dialog = { kind: 'create' }">
-        创建新对局
-      </button>
-      <button type="button" class="button" :disabled="list.loading.value" @click="list.load">
-        刷新列表
+      <button
+        v-if="list.error.value"
+        type="button"
+        class="button"
+        :disabled="list.loading.value"
+        @click="list.load"
+      >
+        重试读取列表
       </button>
       <label class="checkbox-label"
         ><input v-model="autoRefresh" type="checkbox" />自动刷新并进入已开局对局（5 秒）</label
@@ -102,7 +136,7 @@ function created(id: number) {
     <p class="hint" role="status">
       {{
         polling.paused.value
-          ? '自动刷新已暂停（手动关闭、离线、后台或弹窗打开）。'
+          ? '自动刷新已暂停（手动关闭、离线、后台、弹窗或导航菜单打开）。'
           : '自动刷新已开启。'
       }}
     </p>
@@ -132,6 +166,7 @@ function created(id: number) {
     </form>
     <p v-if="list.loading.value && !list.result.value" role="status">正在加载对局…</p>
     <p v-else-if="list.result.value && !list.result.value.items.length">暂无符合条件的对局。</p>
+    <SkeletonBlock v-if="list.loading.value && !list.result.value && !list.error.value" />
     <div class="game-grid" :aria-busy="list.loading.value">
       <GameCard
         v-for="game in list.result.value?.items"

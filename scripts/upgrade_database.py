@@ -1,4 +1,4 @@
-"""Explicit 0011..0018 upgrade; default is a read-only version/plan check.
+"""Explicit 0011..0019 upgrade; default is a read-only version/plan check.
 
 Uses explicit WM_DB_HOST/PORT/NAME/USER/PASSWORD, never local-launcher settings.
 Backups, restoring a copy and stopping ALL writers are operator prerequisites.
@@ -33,9 +33,14 @@ REVISIONS = (
     '0016_game_names',
     '0017_weighted_rating',
     '0018_bounded_rating',
+    '0019_manual_visibility',
 )
 TARGET = REVISIONS[-1]
 ADDITIONS = {
+    '0019_manual_visibility': {
+        'tables': (),
+        'columns': {'manual_rating': {'publish_reason': 0, 'publish_actor': 0}},
+    },
     '0018_bounded_rating': {
         'tables': (),
         'columns': {'game_rating_snapshot': {'rule_version': 'weighted-rating-v1'}},
@@ -132,7 +137,7 @@ def migration_plan(current, target):
             raise UpgradeError('Unexpected migration chain; review source before upgrading')
     if current not in REVISIONS:
         raise UpgradeError(
-            'Only intact 0011..0018 databases are supported; no initialization or adoption'
+            'Only intact 0011..0019 databases are supported; no initialization or adoption'
         )
     if target not in REVISIONS or REVISIONS.index(target) < REVISIONS.index(current):
         raise UpgradeError('Downgrade is not supported')
@@ -256,6 +261,12 @@ def verify_preserved(connection, original, applied):
                 raise UpgradeError(
                     'Unexpected values in a newly added column; keep writers stopped'
                 )
+    if '0019_manual_visibility' in applied:
+        enforced = connection.exec_driver_sql(
+            "SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='manual_rating' AND CONSTRAINT_NAME='ck_manual_visibility' AND CONSTRAINT_TYPE='CHECK' AND ENFORCED='YES'"
+        ).scalar_one()
+        if enforced != 1:
+            raise UpgradeError('Manual visibility CHECK requires review; keep writers stopped')
     if '0018_bounded_rating' in applied:
         from wm_app.models import weighted_v2
 

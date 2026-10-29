@@ -1,5 +1,6 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ message: string; kind?: 'error' | 'success' | 'info' }>(), {
+// Warnings are persistent, polite status messages; errors retain alert semantics.
+withDefaults(defineProps<{ message: string; kind?: 'error' | 'success' | 'info' | 'warning' }>(), {
   kind: 'error',
 })
 </script>

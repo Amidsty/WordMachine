@@ -14,6 +14,12 @@ const common = z.object({
 export const ratingHistorySchema = common
   .extend({
     source: z.enum(['legacy', 'game', 'manual']),
+    reason: z
+      .string()
+      .min(1)
+      .refine((value) => Array.from(value).length <= 500)
+      .optional(),
+    actor_id: z.number().int().positive().optional(),
     game_available: z.boolean(),
     before: integer.nullable(),
     delta: z.number().int().min(-4294967295).max(4294967295).nullable(),
@@ -22,6 +28,9 @@ export const ratingHistorySchema = common
     competitive_delta: z.number().int().min(-200).max(200).nullable().optional(),
     newcomer_bonus: z.number().int().min(0).max(600).nullable().optional(),
   })
+  .refine(
+    (row) => row.source === 'manual' || (row.reason === undefined && row.actor_id === undefined),
+  )
   .refine((row) =>
     ['weighted-rating-v1', 'weighted-rating-v2'].includes(row.rule_version ?? '')
       ? row.source === 'game' &&
