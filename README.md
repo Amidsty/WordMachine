@@ -2,7 +2,7 @@
 
 多人单词对战网站，基于 Flask、MySQL、Socket.IO 和 Vue 3 + TypeScript。
 
-仓库：<https://github.com/sun2snow/WordMachine>
+仓库：<https://github.com/Amidsty/WordMachine>
 
 本仓库按精简源码范围交付运行、前端构建、数据库迁移及示例配置。测试、CI、开发文档、本机专用启动工具、实际配置、数据库、日志和构建产物不在交付范围内。代码推送不代表数据库升级或生产部署。
 
