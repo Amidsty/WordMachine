@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ratingStateSchema } from '../games/weighted'
+import { scorePointsSchema } from './scoreChart'
 import type { ApiClient } from '../../shared/api/client'
 import { successSchema } from '../../shared/api/contracts'
 import { listQueryString, paginationSchema, type ListQuery } from '../../shared/api/pagination'
@@ -53,6 +54,45 @@ export const perfHistorySchema = common.extend({
 })
 export type RatingHistory = z.infer<typeof ratingHistorySchema>
 export type PerfHistory = z.infer<typeof perfHistorySchema>
+export const combinedHistorySchema = z
+  .object({
+    key: z
+      .string()
+      .regex(/^(rating|game):[1-9]\d*$/)
+      .max(40),
+    recorded_at: z.string().datetime({ offset: true }).nullable(),
+    rating: ratingHistorySchema.nullable(),
+    perf: perfHistorySchema.nullable(),
+  })
+  .superRefine((row, context) => {
+    const r = row.rating,
+      p = row.perf
+    const invalid =
+      (!r && !p) ||
+      (r ? !row.key.startsWith('rating:') : row.key !== `game:${p?.game_id}`) ||
+      row.recorded_at !== (r ? r.recorded_at : p?.recorded_at) ||
+      (r &&
+        (r.source === 'manual'
+          ? r.game_id !== null || r.game_available || p !== null
+          : r.game_id === null)) ||
+      (r &&
+        p &&
+        (r.game_id !== p.game_id ||
+          !p.rated ||
+          !r.game_available ||
+          r.game_name !== p.game_name)) ||
+      (p &&
+        ((p.perf === null) !== (p.missing_reason !== null) ||
+          (p.answered_count === 0) !== (p.missing_reason === 'no_answers'))) ||
+      (r &&
+        r.before !== null &&
+        r.delta !== null &&
+        r.after !== null &&
+        r.after !== r.before + r.delta)
+    if (invalid)
+      context.addIssue({ code: 'custom', message: 'Inconsistent combined score history' })
+  })
+export type CombinedHistory = z.infer<typeof combinedHistorySchema>
 export function createHistoryService(client: ApiClient) {
   const envelope = (uid: number, kind: HistoryKind) =>
     successSchema.extend({
@@ -62,6 +102,27 @@ export function createHistoryService(client: ApiClient) {
       pagination: paginationSchema,
     })
   return {
+    async combined(uid: number, query: ListQuery, signal?: AbortSignal) {
+      const data = await client.request(
+        `/api/user/${uid}/score-history?${listQueryString(query)}`,
+        successSchema.extend({
+          user_id: z.literal(uid),
+          pagination: paginationSchema,
+          history: z
+            .array(combinedHistorySchema)
+            .refine((rows) => new Set(rows.map((row) => row.key)).size === rows.length),
+        }),
+        { signal },
+      )
+      return { items: data.history, pagination: data.pagination }
+    },
+    timeline(uid: number, signal?: AbortSignal) {
+      return client.request(
+        `/api/user/${uid}/score-timeline`,
+        successSchema.extend({ user_id: z.literal(uid), points: scorePointsSchema }),
+        { signal },
+      )
+    },
     account(uid: number, signal?: AbortSignal) {
       return client.request(
         `/api/user/${uid}/rating-state`,

@@ -51,7 +51,8 @@ def legacy_amount(entry, key):
     return value
 
 
-def rating_rows(cursor, user, query):
+def rating_records(cursor, user):
+    """Validated chronological ledger projection, before list/chart presentation."""
     cursor.execute(
         'SELECT r.*, s.rated_count, s.rating_version, s.settled_at, s.recorded_at, '
         'g.settlement_mode, g.status, g.rated FROM game_rating r '
@@ -108,9 +109,20 @@ def rating_rows(cursor, user, query):
                 rows[-1]['reason'] = manual['reason']
             if manual.get('publish_actor', 0) == 1:
                 rows[-1]['actor_id'] = manual['actor_id']
+    return rows, sources
+
+
+def rating_rows(cursor, user, query):
+    rows, sources = rating_records(cursor, user)
     pagination = query.metadata(len(rows))
     offset = page_offset(pagination)
     selected = list(reversed(rows))[offset : offset + query.per_page]
+    decorate_ratings(cursor, user['id'], selected, sources)
+    return {'history': selected, 'pagination': pagination}
+
+
+def decorate_ratings(cursor, uid, selected, sources):
+    """Enrich only the displayed, already validated public ledger records."""
     ids = [row['game_id'] for row in selected if row['game_id'] is not None]
     games = {}
     if ids:
@@ -132,7 +144,7 @@ def rating_rows(cursor, user, query):
             if row['source'] == 'game'
             else ('manual-v1' if row['source'] == 'manual' else None)
         )
-        part = next((p for p in parts.get(row['game_id'], []) if p['user_id'] == user['id']), None)
+        part = next((p for p in parts.get(row['game_id'], []) if p['user_id'] == uid), None)
         if row['rule_version'] in weighted_games.RATING_VERSIONS and part is None:
             raise weighted_games.invalid()
         row['competitive_delta'] = part['competitive_delta'] if part else None
@@ -140,7 +152,6 @@ def rating_rows(cursor, user, query):
         current = games.get(row['game_id'])
         row['game_available'] = current is not None
         row['game_name'] = game_names.stored(current) if current else None
-    return {'history': selected, 'pagination': pagination}
 
 
 def grouped(cursor, table, ids, order):
@@ -159,7 +170,7 @@ def grouped(cursor, table, ids, order):
     return result
 
 
-def perf_rows(cursor, uid, query):
+def perf_rows(cursor, uid, query, *, total=None):
     # Archived JSON must never establish membership of a normalized game.
     # Separate the indexed user-membership branch from legacy JSON scans. The
     # disjoint storage modes make UNION ALL safe, without duplicate game IDs.
@@ -169,8 +180,10 @@ def perf_rows(cursor, uid, query):
         AND JSON_CONTAINS(CASE WHEN JSON_VALID(g.users) THEN g.users ELSE '[]' END, %s)=1) matched"""
     source = ' FROM ' + candidates + ' JOIN game g ON g.id=matched.id'
     params = (uid, json.dumps(uid))
-    cursor.execute('SELECT COUNT(*) AS total' + source, params)
-    pagination = query.metadata(cursor.fetchone()['total'])
+    if total is None:
+        cursor.execute('SELECT COUNT(*) AS total' + source, params)
+        total = cursor.fetchone()['total']
+    pagination = query.metadata(total)
     cursor.execute(
         'SELECT g.*' + source + ' ORDER BY g.id DESC LIMIT %s OFFSET %s',
         (*params, query.per_page, page_offset(pagination)),
@@ -259,6 +272,18 @@ def perf_rows(cursor, uid, query):
             }
         )
     return {'history': rows, 'pagination': pagination}
+
+
+def all_perfs(cursor, uid):
+    """Read every source batch in the caller's snapshot, not just its UI page."""
+    rows, page, total = [], 1, None
+    while True:
+        result = perf_rows(cursor, uid, ListQuery(page, 100), total=total)
+        rows.extend(result['history'])
+        total = result['pagination']['total']
+        if page * 100 >= total:
+            return rows
+        page += 1
 
 
 def account(uid):

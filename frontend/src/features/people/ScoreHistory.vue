@@ -7,19 +7,26 @@ import { usePagedResource } from '../../shared/data/usePagedResource'
 import DataTable from '../../shared/ui/DataTable.vue'
 import PaginationBar from '../../shared/ui/PaginationBar.vue'
 import { storedNumber, storedPerf } from '../games/presentation'
-import type { HistoryKind, RatingHistory, PerfHistory } from './history'
+import type { CombinedHistory } from './history'
 import { localHistoryTime } from './historyTime'
 
-const props = defineProps<{ uid: number; kind: HistoryKind }>()
+const props = defineProps<{ uid: number }>()
 const services = useServices()
-const title = computed(() => (props.kind === 'rating' ? 'Rating 历史' : 'Perf 历史'))
-const rows = usePagedResource<RatingHistory | PerfHistory>((query, signal) =>
-  props.kind === 'rating'
-    ? services.history.ratings(props.uid, query, signal)
-    : services.history.perfs(props.uid, query, signal),
+const title = 'Rating / Perf 历史'
+const rows = usePagedResource<CombinedHistory>((query, signal) =>
+  services.history.combined(props.uid, query, signal),
 )
 const displayedRows = computed(() =>
-  (rows.result.value?.items ?? []).map((row) => ({ row, time: localHistoryTime(row.recorded_at) })),
+  (rows.result.value?.items ?? []).map((row) => ({
+    ...row,
+    time: localHistoryTime(row.recorded_at),
+    perfTime:
+      row.rating && row.perf && row.perf.recorded_at !== row.recorded_at
+        ? localHistoryTime(row.perf.recorded_at)
+        : null,
+    game: row.rating ?? row.perf!,
+    available: row.rating ? row.rating.game_available : true,
+  })),
 )
 onMounted(rows.load)
 useAutoRefresh(rows.refresh)
@@ -37,15 +44,7 @@ function changeClass(value: number | null | undefined) {
 <template>
   <section class="score-history" :aria-label="title">
     <h2 tabindex="-1">{{ title }}</h2>
-    <p v-if="kind === 'rating'" class="hint">
-      按历史记录顺序倒序展示，包含比赛结算和人工调整；仅显示操作者为该次调整选择公开的原因和身份。Unrated
-      不产生 Rating 记录。
-    </p>
-    <p v-else class="hint">
-      按房间号倒序展示已结束对局的最终保存 Perf，包含 Rated /
-      Unrated；未作答或记录缺失不会补为零。显示保留一位小数，不改变原值。
-    </p>
-    <p class="hint">时间按浏览器的本地时区显示。</p>
+    <p class="hint">按已保存时间倒序，时间未记录的列在末尾；时间按浏览器本地时区显示。</p>
     <button
       v-if="rows.error.value"
       type="button"
@@ -66,64 +65,88 @@ function changeClass(value: number | null | undefined) {
         ><tr>
           <th scope="col">时间</th>
           <th scope="col">来源</th>
-          <template v-if="kind === 'rating'"
-            ><th scope="col">变化前</th>
-            <th scope="col">变化</th>
-            <th scope="col">变化后</th>
-            <th scope="col">原因</th>
-            <th scope="col">操作者</th></template
-          >
-          <template v-else
-            ><th scope="col">模式</th>
-            <th scope="col">作答数</th>
-            <th scope="col">最终 Perf</th></template
-          >
+          <th scope="col">模式</th>
+          <th scope="col">作答数</th>
+          <th scope="col">Perf</th>
+          <th scope="col">Rating 前</th>
+          <th scope="col">变化</th>
+          <th scope="col">Rating 后</th>
+          <th scope="col">原因</th>
+          <th scope="col">操作者</th>
         </tr></template
       >
-      <tr
-        v-for="({ row, time }, index) in displayedRows"
-        :key="`${kind}:${rows.page.value}:${index}`"
-      >
+      <tr v-for="row in displayedRows" :key="row.key">
         <td class="history-time">
-          <time v-if="time.datetime" :datetime="time.datetime">{{ time.text }}</time>
-          <span v-else>{{ time.text }}</span>
+          <time v-if="row.time.datetime" :datetime="row.time.datetime">{{ row.time.text }}</time>
+          <span v-else>{{ row.time.text }}</span>
+          <small v-if="row.perfTime"
+            ><br />Perf：<time v-if="row.perfTime.datetime" :datetime="row.perfTime.datetime">{{
+              row.perfTime.text
+            }}</time
+            ><span v-else>{{ row.perfTime.text }}</span></small
+          >
         </td>
         <td>
-          <template v-if="'after' in row">{{ labels[row.source] }}<br /></template>
+          <template v-if="row.rating">{{ labels[row.rating.source] }}<br /></template>
           <RouterLink
-            v-if="row.game_id !== null && (!('game_available' in row) || row.game_available)"
-            :to="`/game/${row.game_id}/detail/`"
-            ><bdi>{{ row.game_name ?? '对局' }}</bdi> #{{ row.game_id }}</RouterLink
+            v-if="row.game.game_id !== null && row.available"
+            :to="`/game/${row.game.game_id}/detail/`"
+            ><bdi>{{ row.game.game_name ?? '对局' }}</bdi> #{{ row.game.game_id }}</RouterLink
           >
-          <span v-else-if="row.game_id !== null">对局 #{{ row.game_id }}（记录不可用）</span>
-          <span v-else-if="!('after' in row) || row.source !== 'manual'">—</span>
+          <span v-else-if="row.game.game_id !== null"
+            >对局 #{{ row.game.game_id }}（记录不可用）</span
+          >
         </td>
-        <template v-if="'after' in row"
-          ><td class="numeric">{{ storedNumber(row.before) }}</td>
-          <td class="numeric" :class="changeClass(row.delta)">
-            {{ storedNumber(row.delta, true) }}
-          </td>
-          <td class="numeric">{{ storedNumber(row.after) }}</td>
-          <td class="reason-cell">
-            <span
-              v-if="row.source === 'manual' && row.reason !== undefined"
-              class="multiline manual-reason"
-              >{{ row.reason }}</span
-            >
-          </td>
-          <td>
-            <span v-if="row.source === 'manual' && row.actor_id !== undefined" class="manual-actor">
-              <RouterLink :to="`/user/${row.actor_id}/`">用户 #{{ row.actor_id }}</RouterLink>
-            </span>
-          </td>
-        </template>
-        <template v-else
-          ><td>{{ row.rated ? 'Rated' : 'Unrated' }}</td>
-          <td class="numeric">{{ row.answered_count }}</td>
-          <td class="numeric" :title="row.perf === null ? undefined : String(row.perf)">
-            {{ row.missing_reason === 'no_answers' ? '未作答' : storedPerf(row.perf) }}
-          </td></template
-        >
+        <td>
+          {{
+            row.rating?.source === 'manual'
+              ? '—'
+              : row.perf
+                ? row.perf.rated
+                  ? 'Rated'
+                  : 'Unrated'
+                : row.rating?.source === 'game'
+                  ? 'Rated'
+                  : '记录缺失'
+          }}
+        </td>
+        <td class="numeric">{{ row.perf?.answered_count ?? '—' }}</td>
+        <td class="numeric" :title="row.perf?.perf == null ? undefined : String(row.perf.perf)">
+          {{
+            row.rating?.source === 'manual'
+              ? '不适用'
+              : row.perf?.missing_reason === 'no_answers'
+                ? '未作答'
+                : storedPerf(row.perf?.perf ?? null)
+          }}
+        </td>
+        <td class="numeric">{{ row.rating ? storedNumber(row.rating.before) : '—' }}</td>
+        <td class="numeric" :class="changeClass(row.rating?.delta)">
+          {{
+            row.rating
+              ? storedNumber(row.rating.delta, true)
+              : row.perf?.rated
+                ? '无评分记录'
+                : '不计分'
+          }}
+        </td>
+        <td class="numeric">{{ row.rating ? storedNumber(row.rating.after) : '—' }}</td>
+        <td class="reason-cell">
+          <span
+            v-if="row.rating?.source === 'manual' && row.rating.reason !== undefined"
+            class="multiline manual-reason"
+            >{{ row.rating.reason }}</span
+          >
+        </td>
+        <td>
+          <span
+            v-if="row.rating?.source === 'manual' && row.rating.actor_id !== undefined"
+            class="manual-actor"
+            ><RouterLink :to="`/user/${row.rating.actor_id}/`"
+              >用户 #{{ row.rating.actor_id }}</RouterLink
+            ></span
+          >
+        </td>
       </tr>
     </DataTable>
     <PaginationBar
