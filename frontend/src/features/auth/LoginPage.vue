@@ -41,7 +41,6 @@ async function submit() {
       <p class="auth-kicker">WORDMACHINE · 单词竞技台</p>
       <p class="auth-statement">从一个单词，<br />开始一场对战。</p>
       <p>专注每一次作答，清楚了解自己的表现。</p>
-      <p class="hint">Rated 更新 Rating；Unrated 保留练习表现，不更新 Rating。</p>
     </aside>
     <FormPanel title="登录" description="从一个单词，开始一场对战。">
       <NoticeBanner :message="notice" kind="success" />

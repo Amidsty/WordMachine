@@ -10,14 +10,14 @@ import NoticeBanner from '../../shared/ui/NoticeBanner.vue'
 import UserName from '../../shared/ui/UserName.vue'
 import SkeletonBlock from '../../shared/ui/SkeletonBlock.vue'
 import ScoreHistory from './ScoreHistory.vue'
+import ScoreChart from './ScoreChart.vue'
 import RatingState from './RatingState.vue'
 const services = useServices()
 const route = useRoute()
 const userId = Number(route.params.id)
 const user = shallowRef<PublicUser | null>(null)
 const task = useFormTask()
-const ratingHistory = ref<HTMLElement>()
-const perfHistory = ref<HTMLElement>()
+const scoreHistory = ref<HTMLElement>()
 // This only exposes a read-only menu entry. Actual actions come from the
 // freshly fetched server capabilities, never from public profile data.
 const canOpenManagement = computed(() => {
@@ -27,9 +27,8 @@ const canOpenManagement = computed(() => {
 function manage() {
   if (user.value && canOpenManagement.value) services.userMenuTarget.value = user.value.id
 }
-function showHistory(kind: 'rating' | 'perf') {
-  const section = kind === 'rating' ? ratingHistory.value : perfHistory.value
-  const heading = section?.querySelector<HTMLElement>('h2')
+function showHistory() {
+  const heading = scoreHistory.value?.querySelector<HTMLElement>('h2')
   heading?.focus()
   heading?.scrollIntoView({ block: 'start' })
 }
@@ -104,10 +103,7 @@ watch(services.userChanges, () => {
         </div>
       </header>
       <nav class="actions profile-navigation" aria-label="资料页内导航">
-        <button type="button" class="button" @click="showHistory('rating')">
-          查看 Rating 历史
-        </button>
-        <button type="button" class="button" @click="showHistory('perf')">查看 Perf 历史</button>
+        <button type="button" class="button" @click="showHistory">查看 Rating / Perf 历史</button>
       </nav>
       <div class="profile-overview">
         <RatingState :key="user.id" :uid="user.id" />
@@ -116,11 +112,9 @@ watch(services.userChanges, () => {
           <p class="multiline">{{ user.introduction || '该用户还没有个人简介。' }}</p>
         </section>
       </div>
-      <div ref="ratingHistory" class="profile-history">
-        <ScoreHistory :uid="user.id" kind="rating" />
-      </div>
-      <div ref="perfHistory" class="profile-history">
-        <ScoreHistory :uid="user.id" kind="perf" />
+      <ScoreChart :key="user.id" :uid="user.id" />
+      <div ref="scoreHistory" class="profile-history">
+        <ScoreHistory :key="user.id" :uid="user.id" />
       </div>
     </template>
   </section>

@@ -9,7 +9,8 @@ from .security.http import (
     request_identity,
 )
 from .security.rate_limit import limit_login, limit_registration
-from .services import auth, leaderboard, user_history
+from .services import auth, leaderboard, score_history, score_timeline, user_history
+from .services.errors import ApiError
 from .services.pagination import ListQuery, query_value
 from .services.validation import password as validate_password
 from .services.validation import username as validate_username
@@ -102,6 +103,22 @@ def api_user_history(data, user, uid):
         success=True,
         **user_history.listing(uid, query_value(data, 'kind', 'rating'), ListQuery.parse(data)),
     )
+
+
+@bp.get('/api/user/<int:uid>/score-history')
+@api_endpoint(authenticated=False)
+def api_score_history(data, user, uid):
+    if set(data) - {'page', 'per_page', 'q'}:
+        raise ApiError('Unsupported score history query parameter')
+    return jsonify(success=True, **score_history.listing(uid, ListQuery.parse(data)))
+
+
+@bp.get('/api/user/<int:uid>/score-timeline')
+@api_endpoint(authenticated=False)
+def api_score_timeline(data, user, uid):
+    if data:
+        raise ApiError('Score timeline does not accept query parameters')
+    return jsonify(success=True, **score_timeline.listing(uid))
 
 
 @bp.post('/api/user/<int:uid>/update')
